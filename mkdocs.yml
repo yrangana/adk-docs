@@ -1,0 +1,138 @@
+# Project information
+site_name: Agent Development Kit
+site_url: https://mydomain.org/
+site_description: >-
+  Build powerful multi-agent systems with Agent Development Kit
+site_dir: site
+
+# Repository
+repo_name: google-adk
+repo_url: https://github.com/google/google-adk
+
+# Copyright
+copyright: Copyright Google 2025
+
+# Custom CSS
+extra_css:
+  - stylesheets/custom.css
+
+# Configuration
+theme:
+  name: material
+  font:
+    text: Google Sans
+    code: Roboto Mono
+  logo: assets/agent-development-kit.png
+  favicon: assets/agent-development-kit.png
+  icon:
+    repo: fontawesome/brands/github
+  custom_dir: overrides
+  palette:
+    - scheme: default
+      primary: white
+      accent: white
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: white
+      accent: white
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+# TODO: Custom color palette
+#  palette:
+#    primary: custom
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.top
+    - toc.follow
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+# Plugins
+plugins:
+  - search
+
+# Navigation
+nav:
+  - Get Started:
+    - Overview: index.md
+    - Installation: get-started/setup-and-installation.md
+    - Quickstart: get-started/quickstart.md
+    - Tutorial: get-started/weather-agent-sample.md
+    - Sample Agents: https://github.com/google/adk-samples
+    # - Introduction: get-started/introduction.md
+    # - Running the Agent: get-started/running-the-agent.md
+    # - Weather Agent: get-started/weather-agent-sample.md
+  - Agents:
+    - Overview: agents/overview.md
+    - LLM Agent: agents/llm-agent.md
+    - Non-LLM Agent: agents/non-llm-agent.md
+    - Custom Agent: agents/custom-agent.md
+    - Multi-Agent Systems: agents/multi-agents.md
+    - Models: agents/models.md
+  - Tools:
+    - Overview: tools/overview.md
+    - Function Tools: tools/function-tools.md
+    - Built-In Tools: tools/built-in-tools.md
+    - Third Party Tools: tools/third-party-tools.md
+    - Google Cloud Tools: tools/google-cloud-tools.md
+    - MCP Tools: tools/mcp-tools.md
+    - OpenAPI Tools: tools/openapi-tools.md
+    - Authentication: tools/authentication.md
+  - Sessions & State:
+    - Overview: sessions/overview.md
+    - Session Properties: sessions/session-properties.md
+    - State Properties: sessions/state-properties.md
+  - Callbacks & Events:
+    - Overview: callbacks/overview.md
+    - Event System: callbacks/events.md
+    - Types of Callbacks: callbacks/types-of-callbacks.md
+    - Callback Patterns: callbacks/design-patterns-and-best-practices.md
+  - Runtime & Execution:
+    - Overview: runtime/overview.md
+    - Artifacts: runtime/artifacts.md
+    - Invocation Context: runtime/invocation-context.md
+  - Deploy:
+    - Overview: deploy/overview.md
+    - Local Testing: deploy/local-testing.md
+    - Agent Engine: deploy/agent-engine.md
+    - Cloud Run: deploy/cloud-run.md
+    - Docker: deploy/docker.md
+  - Guides:
+    - Evaluate Agents: guides/evaluate-agents.md
+    - Design Patterns: guides/multi-agent-design-pattern.md
+    - Responsible Agents: guides/responsible-agents.md
+    - Troubleshooting: guides/troubleshooting.md
+  - API Reference:
+    - API Reference: api-reference/index.md
+  - Resources:
+    - Release Notes: resources/release-notes.md
+    - Contribute: resources/contribute.md
