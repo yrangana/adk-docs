@@ -37,7 +37,7 @@ This tool is a python function which obtains the Stock price of a given Stock ti
 <u>Note</u>: You need to `pip install yfinance` library before using this tool.
 
 ```py
---8<-- "examples/python/snippets/tools/function-tools/func-tool.py"
+--8<-- "examples/python/snippets/tools/function-tools/func_tool.py"
 ```
 
 The return value from this tool will be wrapped into a dictionary.
@@ -113,7 +113,7 @@ The Python object your generator function returns is considered the final result
 ### Example: File Processing Simulation
 
 ```py
---8<-- "examples/python/snippets/tools/function-tools/file-processor.py"
+--8<-- "examples/python/snippets/tools/function-tools/file_processor.py"
 ```
 
 #### Key aspects of this example
@@ -158,7 +158,7 @@ The `AgentTool` class provides the following attributes for customizing its beha
 --8<-- "examples/python/snippets/tools/function-tools/summarizer.py"
 ```
 
-**How it works**
+### How it works
 
 1. When the `main_agent` receives the long text, its instruction tells it to use the 'summarize' tool for long texts.  
 2. The framework recognizes 'summarize' as an `AgentTool` that wraps the `summary_agent`.  

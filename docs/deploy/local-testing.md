@@ -5,7 +5,7 @@ working as intended.
 
 The easiest way is to test your a local agent is to use the ADK CLI with `adk api_server`, which launches a local Fast API server, where you can run cURL commands to test your agent.
 
-#### Working directory 
+## Working directory
 
 First, ensure you are in the correct working directory:
 
@@ -34,7 +34,7 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-Your server is now running locally at http://0.0.0.0:8000.
+Your server is now running locally at `http://0.0.0.0:8000`.
 
 ### Creating a new session for your agent
 

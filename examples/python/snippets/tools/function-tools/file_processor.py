@@ -59,12 +59,12 @@ runner = Runner(agent=file_processor_agent, app_name=APP_NAME, session_service=s
 
 # Agent Interaction
 def call_agent(query):
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-  events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
 
-  for event in events:
-      if event.is_final_response():
-          final_response = event.content.parts[0].text
-          print("Agent Response: ", final_response)
+    for event in events:
+        if event.is_final_response():
+            final_response = event.content.parts[0].text
+            print("Agent Response: ", final_response)
 
 call_agent("Replace with a path to your file...")

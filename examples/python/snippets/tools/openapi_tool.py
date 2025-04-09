@@ -1,5 +1,4 @@
 import asyncio
-import json
 import uuid # For unique session IDs
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
@@ -167,39 +166,39 @@ session_openapi = session_service_openapi.create_session(
 
 # --- Agent Interaction Function ---
 async def call_openapi_agent_async(query):
-  print(f"\n--- Running OpenAPI Pet Store Agent ---")
-  print(f"Query: {query}")
-  if not generated_tools_list:
-      print("Skipping execution: No tools were generated.")
-      print("-" * 30)
-      return
+    print("\n--- Running OpenAPI Pet Store Agent ---")
+    print(f"Query: {query}")
+    if not generated_tools_list:
+        print("Skipping execution: No tools were generated.")
+        print("-" * 30)
+        return
 
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-  final_response_text = "Agent did not provide a final text response."
-  try:
-    async for event in runner_openapi.run_async(
-        user_id=USER_ID_OPENAPI, session_id=SESSION_ID_OPENAPI, new_message=content
-    ):
-        # Optional: Detailed event logging for debugging
-        # print(f"  DEBUG Event: Author={event.author}, Type={'Final' if event.is_final_response() else 'Intermediate'}, Content={str(event.content)[:100]}...")
-        if event.get_function_calls():
-             call = event.get_function_calls()[0]
-             print(f"  Agent Action: Called function '{call.name}' with args {call.args}")
-        elif event.get_function_responses():
-             response = event.get_function_responses()[0]
-             print(f"  Agent Action: Received response for '{response.name}'")
-             # print(f"  Tool Response Snippet: {str(response.response)[:200]}...") # Uncomment for response details
-        elif event.is_final_response() and event.content and event.content.parts:
-            # Capture the last final text response
-            final_response_text = event.content.parts[0].text.strip()
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    final_response_text = "Agent did not provide a final text response."
+    try:
+        async for event in runner_openapi.run_async(
+            user_id=USER_ID_OPENAPI, session_id=SESSION_ID_OPENAPI, new_message=content
+            ):
+            # Optional: Detailed event logging for debugging
+            # print(f"  DEBUG Event: Author={event.author}, Type={'Final' if event.is_final_response() else 'Intermediate'}, Content={str(event.content)[:100]}...")
+            if event.get_function_calls():
+                call = event.get_function_calls()[0]
+                print(f"  Agent Action: Called function '{call.name}' with args {call.args}")
+            elif event.get_function_responses():
+                response = event.get_function_responses()[0]
+                print(f"  Agent Action: Received response for '{response.name}'")
+                # print(f"  Tool Response Snippet: {str(response.response)[:200]}...") # Uncomment for response details
+            elif event.is_final_response() and event.content and event.content.parts:
+                # Capture the last final text response
+                final_response_text = event.content.parts[0].text.strip()
 
-    print(f"Agent Final Response: {final_response_text}")
+        print(f"Agent Final Response: {final_response_text}")
 
-  except Exception as e:
-    print(f"An error occurred during agent run: {e}")
-    import traceback
-    traceback.print_exc() # Print full traceback for errors
-  print("-" * 30)
+    except Exception as e:
+        print(f"An error occurred during agent run: {e}")
+        import traceback
+        traceback.print_exc() # Print full traceback for errors
+    print("-" * 30)
 
 # --- Run Examples ---
 async def run_openapi_example():
@@ -217,10 +216,11 @@ if __name__ == "__main__":
     try:
         asyncio.run(run_openapi_example())
     except RuntimeError as e:
-         if "cannot be called from a running event loop" in str(e):
-             print("Info: Cannot run asyncio.run from a running event loop (e.g., Jupyter/Colab).")
-             # If in Jupyter/Colab, you might need to run like this:
-             # await run_openapi_example()
-         else:
-             raise e
+        if "cannot be called from a running event loop" in str(e):
+            print("Info: Cannot run asyncio.run from a running event loop (e.g., Jupyter/Colab).")
+            # If in Jupyter/Colab, you might need to run like this:
+            # await run_openapi_example()
+        else:
+            raise e
     print("OpenAPI example finished.")
+    

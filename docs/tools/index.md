@@ -70,7 +70,7 @@ Furthermore, ADK supports the sequential use of tools, where the output of one t
 The following example showcases how an agent can use tools by **referencing their function names in its instructions**. It also demonstrates how to guide the agent to **handle different return values from tools**, such as success or error messages, and how to orchestrate the **sequential use of multiple tools** to accomplish a task.
 
 ```py
---8<-- "examples/python/snippets/tools/overview/weather-sentiment.py"
+--8<-- "examples/python/snippets/tools/overview/weather_sentiment.py"
 ```
 
 ## Tool Context
@@ -110,7 +110,7 @@ The `tool_context.state` attribute provides direct read and write access to the 
     * `temp:*`: Temporary, not persisted across invocations (useful for passing data within a single run call but generally less useful inside a tool context which operates between LLM calls).
 
 ```py
---8<-- "examples/python/snippets/tools/overview/user-preference.py"
+--8<-- "examples/python/snippets/tools/overview/user_preference.py"
 ```
 
 ### **Controlling Agent Flow**
@@ -126,7 +126,7 @@ The `tool_context.actions` attribute holds an **EventActions** object. Modifying
 #### Example
 
 ```py
---8<-- "examples/python/snippets/tools/overview/customer-support-agent.py"
+--8<-- "examples/python/snippets/tools/overview/customer_support_agent.py"
 ```
 
 ##### Explanation
@@ -167,7 +167,7 @@ These methods provide convenient ways for your tool to interact with persistent 
 #### Example
 
 ```py
---8<-- "examples/python/snippets/tools/overview/doc-analysis.py"
+--8<-- "examples/python/snippets/tools/overview/doc_analysis.py"
 ```
 
 By leveraging the **ToolContext**, developers can create more sophisticated and context-aware custom tools that seamlessly integrate with ADK's architecture and enhance the overall capabilities of their agents.

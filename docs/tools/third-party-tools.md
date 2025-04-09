@@ -67,7 +67,7 @@ ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain e
 Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
 
 ```py
---8<-- "examples/python/snippets/tools/third-party/langchain-tavily-search.py"
+--8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
 ```
 
 ## 2. Using CrewAI tools
@@ -137,5 +137,5 @@ ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library
 Here's the full code combining the steps above to create and run an agent using the CrewAI Serper API search tool.
 
 ```py
---8<-- "examples/python/snippets/tools/third-party/crewai-serper-search.py"
+--8<-- "examples/python/snippets/tools/third-party/crewai_serper_search.py"
 ```
