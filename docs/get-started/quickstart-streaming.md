@@ -1,6 +1,6 @@
 # ADK Streaming Quickstart {#adk-streaming-quickstart}
 
-This Quickstart will guide you through installing ADK, setting up a basic "Google Search" agent, and building a simple asynchronous web app that uses the Streaming API and [FastAPI](https://fastapi.tiangolo.com/).
+With this quickstart, you'll learn to create a simple agent and use ADK Streaming to enable audio and video communication with it. We will install ADK, set up a basic "Google Search" agent, try running the agent with Streaming with `adk web` tool, and then explain how to build a simple asynchronous web app by yourself using ADK Streaming and [FastAPI](https://fastapi.tiangolo.com/).
 
 **Note:** This guide assumes you have experience using a terminal in Windows, Mac, and Linux environments.
 
@@ -23,19 +23,14 @@ Install ADK:
 pip install google-adk
 ```
 
-**Note:** We recommend using a Python virtual environment.
-
-## 2\. Project Structure {#2.-project-structure}
+## 2. Project Structure {#2.-project-structure}
 
 Create the following folder structure with empty files:
 
 ```console
 adk-streaming/  # Project folder
-└── app/ # FastAPI web app folder
-    |── main.py # FastAPI web app
-    |── .env # Gemini API key
-    ├── static/ # Static content folder
-    |   └── index.html # The web client page
+└── app/ # the web app folder
+    ├── .env # Gemini API key
     └── google_search_agent/ # Agent folder
         ├── __init__.py # Python package
         └── agent.py # Agent definition
@@ -43,7 +38,7 @@ adk-streaming/  # Project folder
 
 ### agent.py
 
-Copy-paste the following code block to the [`agent.py`](http://agent.py). This is exactly the same code as the Quickstart guide earlier, except for the model name.
+Copy-paste the following code block to the [`agent.py`](http://agent.py). Please note that ADK Streaming works with `gemini-2.0-flash-exp` model only.
 
 ```py
 from google.adk.agents import Agent
@@ -73,7 +68,79 @@ Copy-paste the following code block to `__init__.py` and `main.py` files.
 from . import agent
 ```
 
-```py title="main.py"
+## 3\. Setup Gemini API Key {#3.-setup-gemini-api-key}
+
+To run your agent, you'll need to set up a Gemini API Key.
+
+1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).  
+2. Inside your `app` directory, create a `.env` file.  
+3. Add these lines to `.env`, replacing `YOUR_API_KEY_HERE` with your key:
+
+**.env**
+
+```
+GOOGLE_API_KEY=YOUR_API_KEY_HERE # Replace with your API Key
+GOOGLE_GENAI_USE_VERTEXAI=0
+```
+
+## 4. Try the agent with `adk web` {#4.-try-it-adk-web}
+
+Now it's ready to try the agent. Run the following command to launch the **dev UI**. First, make sure to set the current directory to `app`:
+
+```
+cd app
+```
+
+Then, run the dev UI:
+
+```
+adk web
+```
+
+Open the URL provided (usually `http://localhost:8000` or
+`http://127.0.0.1:8000`) **directly in your browser**. This connection stays
+entirely on your local machine. Select `basic_search_agent`.
+
+### 📝 Try with text
+
+Try the following prompts by typing them in the UI.
+
+* What is the weather in New York?
+* What is the time in New York?
+* What is the weather in Paris?
+* What is the time in Paris?
+
+The agent will use the google_search tool to get the latest information to answer those questions.
+
+### 📝 Try with voice and video
+
+Now, click the microphone button to enable the voice input, and ask the same question in voice. You will hear the answer in voice in real-time.
+
+Also, click the camera button to enable the video input, and ask questions like "What do you see?". The agent will answer what they see in the video input.
+
+### Stop the tool
+
+Stop `adk web` by pressing `Ctrl-C` on the console.
+
+## 5. Building a Custom Streaming App (Optional) {#5.-build-custom-app}
+
+We have checked that our basic search agent works with the ADK Streaming. In the following sections, we will learn how to build your own web application capable of the streaming communication using [FastAPI](https://fastapi.tiangolo.com/).
+
+Add `static` directory under `app`, and add `main.py` and `index.html` as empty files, as in the following structure:
+
+```
+adk-streaming/  # Project folder
+└── app/ # the web app folder
+    ├── main.py # FastAPI web app
+    └── static/ # Static content folder
+        └── index.html # The web client page
+```
+
+**main.py**
+
+Copy-paste the following code block to the main.py file.
+
+```py
 import os
 import json
 import asyncio
@@ -355,38 +422,26 @@ This HTML file sets up a basic webpage with:
   * Sends the text entered in the input field to the WebSocket server when the form is submitted.  
   * Attempts to reconnect if the WebSocket connection closes.
 
-## 3\. Setup Gemini API Key {#3.-setup-gemini-api-key}
+## 6\. Interact with Your Streaming app {#4.-interact-with-your-streaming-app}
 
-To interact with your agent, you'll need to set up a Gemini API Key.
+1\. **Navigate to the Correct Directory:**
 
-1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).  
-2. Inside your `app` directory, create a `.env` file.  
-3. Add these lines to `.env`, replacing `YOUR_API_KEY_HERE` with your key:
+   To run your agent effectively, you need to be in the **app folder (`adk-streaming/app`)**   
 
-```shell title=".env"
-GOOGLE_API_KEY=YOUR_API_KEY_HERE # Replace with your API Key
-GOOGLE_GENAI_USE_VERTEXAI=0
+2\. **Start the Fast API**: Run the following command to start CLI interface with
+
 ```
-
-## 4. Interact with Your Agent (FastAPI web app) {#4.-interact-with-your-agent-(fastapi-web-app)}
-
-1. **Navigate to the Correct Directory:**
-
-   To run your agent effectively, you need to be in the **app folder (`adk-streaming/app`)**
-
-1. Start the Fast API: Run the following command to start CLI interface with
-
-```shell
 uvicorn main:app --reload
 ```
 
-2. **Access the UI:** Once the UI server starts, the terminal will display a local URL (e.g., [http://localhost:8000](http://localhost:8501)). Click this link to open the UI in your browser. **\[hover-link\]** [[Ref](https://screenshot.googleplex.com/4vxZejAZ4hpa4Rx)\]
+3\. **Access the UI:** Once the UI server starts, the terminal will display a local URL (e.g., [http://localhost:8000](http://localhost:8501)). Click this link to open the UI in your browser.
+   
 
-Now you should see the ADK dev UI like this:
+Now you should see the UI like this:
 
 <img src="../../assets/adk-streaming.png" alt="ADK Streaming Test">
 
-The agent will use Google Search to respond to your queries. You can send messages to the agent at any time, even while the agent is still responding. The agent's responses will appear incrementally, demonstrating the bidirectional communication capability of the Streaming API.
+Try asking a question `What is Gemini?`. The agent will use Google Search to respond to your queries. You would notice that the UI shows the agent's response as streaming text. You can also send messages to the agent at any time, even while the agent is still responding. This demonstrates the bidirectional communication capability of ADK Streaming.
 
 Benefits over conventional synchronous web apps:
 
