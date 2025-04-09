@@ -30,16 +30,16 @@ runner = Runner(agent=summary_agent, app_name=APP_NAME, session_service=session_
 
 # Agent Interaction
 def call_agent(query):
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-  events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
 
-  for event in events:
-      if event.is_final_response():
-          final_response = event.content.parts[0].text
-          print("Agent Response: ", final_response)
+    for event in events:
+        if event.is_final_response():
+            final_response = event.content.parts[0].text
+            print("Agent Response: ", final_response)
 
 
-long_text="""Quantum computing represents a fundamentally different approach to computation, 
+long_text = """Quantum computing represents a fundamentally different approach to computation, 
 leveraging the bizarre principles of quantum mechanics to process information. Unlike classical computers 
 that rely on bits representing either 0 or 1, quantum computers use qubits which can exist in a state of superposition - effectively 
 being 0, 1, or a combination of both simultaneously. Furthermore, qubits can become entangled, 

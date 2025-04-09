@@ -25,7 +25,7 @@ def process_document(document_name: str, analysis_query: str, tool_context: Tool
     print("Tool: Performed analysis.")
 
     # 4. Save the analysis result as a new artifact
-    analysis_part = types.Part.from_text(analysis_result)
+    analysis_part = types.Part.from_text(text=analysis_result)
     new_artifact_name = f"analysis_{document_name}"
     version = tool_context.save_artifact(new_artifact_name, analysis_part)
     print(f"Tool: Saved analysis result as '{new_artifact_name}' version {version}.")

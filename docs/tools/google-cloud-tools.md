@@ -20,7 +20,7 @@ Google Cloud tools make it easier to connect your agents to Google Cloud’s pro
 3. [Apigee API hub](https://cloud.google.com/apigee/docs/apihub/what-is-api-hub) instance with documented (i.e. OpenAPI spec) APIs  
 4. Set up your project structure and create required files
 
-```
+```console
 project_root_folder
  |
  `-- my_agent
@@ -32,7 +32,7 @@ project_root_folder
 
 ### Create an API Hub Toolset and add it to your agent
 
-Note: this tutorial includes an agent creation. If you already have an agent, you can only follow subset of these steps. 
+Note: this tutorial includes an agent creation. If you already have an agent, you can only follow subset of these steps.
 
 1. Get your access token, so that APIHubToolset can fetch spec from API Hub API. In your terminal run the following command
 
@@ -72,7 +72,7 @@ Note: this tutorial includes an agent creation. If you already have an agent, yo
     )
     ```
 
-    For production deployment we recommend using a service account instead of an access token. In the code snippet above, use `service_account_json=service_account_cred_json_str` and provide your security account credentials instead of the token. 
+    For production deployment we recommend using a service account instead of an access token. In the code snippet above, use `service_account_json=service_account_cred_json_str` and provide your security account credentials instead of the token.
 
     For apihub\_resource\_name, if you know the specific ID of the OpenAPI Spec being used for your API, use `` `projects/my-project-id/locations/us-west1/apis/my-api-id/versions/version-id/specs/spec-id` ``. If you would like the Toolset to automatically pull the first available spec from the API, use `` `projects/my-project-id/locations/us-west1/apis/my-api-id` ``
 
@@ -109,25 +109,24 @@ Note: this tutorial includes an agent creation. If you already have an agent, yo
 ## 2. Connect to Enterprise Applications and Integration workflows
 
 With **ApplicationIntegrationToolset** you can seamlessly give your agents a secure and governed to enterprise applications using Integration Connector’s 100+ pre-built connectors for systems like Salesforce, ServiceNow, JIRA, SAP, and more. Support for both on-prem and SaaS applications.  
-In addition you can  turn your existing Application Integration process automations into agentic workflows by providing application integration workflows as tools to your ADK agents. 
+In addition you can  turn your existing Application Integration process automations into agentic workflows by providing application integration workflows as tools to your ADK agents.
 
 ## Prerequisites
 
 1. [Install ADK](../get-started/installation.md)  
 2. An existing [Application Integration](https://cloud.google.com/application-integration/docs/overview) workflow or [Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview) connection you want to use with your agent  
-3. To use tool with default credentials: have Google Cloud CLI installed. See [installation guide](https://cloud.google.com/sdk/docs/install#installation_instructions)*.*   
+3. To use tool with default credentials: have Google Cloud CLI installed. See [installation guide](https://cloud.google.com/sdk/docs/install#installation_instructions)*.*
    *Run :*
 
-    ```
+    ```shell
     gcloud config set project 
     gcloud auth application-default login
     gcloud auth application-default set-quota-project <project-id>
     ```
 
 4. Set up your project structure and create required files  
-   
-    ```
 
+    ```console
     project_root_folder
     |-- .env
     `-- my_agent
@@ -135,8 +134,6 @@ In addition you can  turn your existing Application Integration process automati
         |-- agent.py
         `__ tools.py
     ```
-
-   
 
 When running the agent, make sure to run adk web in project\_root\_folder
 
@@ -165,7 +162,7 @@ When running the agent, make sure to run adk web in project\_root\_folder
     To find the list of supported entities and actions for a connection, use the connectors apis:  
     [listActions](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listActions), [listEntityTypes](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listEntityTypes)
 
-3. Add the tool to your agent. Update your agent.py file 
+3. Add the tool to your agent. Update your agent.py file
 
     ```py
     from google.adk.agents.llm_agent import LlmAgent
@@ -213,7 +210,7 @@ When running the agent, make sure to run adk web in project\_root\_folder
 
     Note: You can provide service account to be used instead of using default credentials
 
-2. Add the tool to your agent. Update your agent.py file 
+2. Add the tool to your agent. Update your agent.py file
 
     ```py
     from google.adk.agents.llm_agent import LlmAgent
@@ -249,7 +246,7 @@ When running the agent, make sure to run adk web in project\_root\_folder
 
 [MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an open source MCP server for databases. It was designed with enterprise-grade and production-quality in mind. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-Google’s Agent Development Kit (ADK) has built in support for Toolbox. For more information on [getting started](https://googleapis.github.io/genai-toolbox/getting-started) or [configuring](https://googleapis.github.io/genai-toolbox/getting-started/configure/) Toolbox, see the [documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/). 
+Google’s Agent Development Kit (ADK) has built in support for Toolbox. For more information on [getting started](https://googleapis.github.io/genai-toolbox/getting-started) or [configuring](https://googleapis.github.io/genai-toolbox/getting-started/configure/) Toolbox, see the [documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
 
 ![GenAI Toolbox](../assets/mcp_db_toolbox.svg)
 
@@ -266,7 +263,7 @@ Toolbox is an open source server that you deploy and manage yourself. For more i
 
 ADK relies on the \``toolbox-langchain`\` python package to use Toolbox. Install the package before getting started:
 
-```
+```shell
 pip install toolbox-langchain
 ```
 
@@ -291,7 +288,7 @@ tools = toolbox.get_toolset(tool_name='my-tool-name'),root_agent = Agent(
 
 ## Advanced Toolbox Features
 
-Toolbox has a variety of features to make developing Gen AI tools for databases. For more information, read more about the following features:: 
+Toolbox has a variety of features to make developing Gen AI tools for databases. For more information, read more about the following features::
 
 * [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data  
 * [Authorized Invocations:](https://googleapis.github.io/genai-toolbox/resources/tools/#authorized-invocations)  restrict access to use a tool based on the users Auth token  

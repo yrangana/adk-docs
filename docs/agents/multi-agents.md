@@ -269,8 +269,8 @@ data_pipeline = SequentialAgent(
 * **Structure:** A [`ParallelAgent`](workflow-agents/parallel-agents.md) runs multiple `sub_agents` concurrently, often followed by a later agent (in a `SequentialAgent`) that aggregates results.
 * **Goal:** Execute independent tasks simultaneously to reduce latency, then combine their outputs.
 * **ADK Primitives Used:**
-    *   **Workflow:** `ParallelAgent` for concurrent execution (Fan-Out). Often nested within a `SequentialAgent` to handle the subsequent aggregation step (Gather).
-    *   **Communication:** Sub-agents write results to distinct keys in **Shared Session State**. The subsequent "Gather" agent reads multiple state keys.
+    * **Workflow:** `ParallelAgent` for concurrent execution (Fan-Out). Often nested within a `SequentialAgent` to handle the subsequent aggregation step (Gather).
+    * **Communication:** Sub-agents write results to distinct keys in **Shared Session State**. The subsequent "Gather" agent reads multiple state keys.
 
 ```python
 # Conceptual Code: Parallel Information Gathering
@@ -302,8 +302,8 @@ overall_workflow = SequentialAgent(
 * **Structure:** A multi-level tree of agents where higher-level agents break down complex goals and delegate sub-tasks to lower-level agents.
 * **Goal:** Solve complex problems by recursively breaking them down into simpler, executable steps.
 * **ADK Primitives Used:**
-    *   **Hierarchy:** Multi-level `parent_agent`/`sub_agents` structure.
-    *   **Interaction:** Primarily **LLM-Driven Delegation** or **Explicit Invocation (`AgentTool`)** used by parent agents to assign tasks to children. Results are returned up the hierarchy (via tool responses or state).
+    * **Hierarchy:** Multi-level `parent_agent`/`sub_agents` structure.
+    * **Interaction:** Primarily **LLM-Driven Delegation** or **Explicit Invocation (`AgentTool`)** used by parent agents to assign tasks to children. Results are returned up the hierarchy (via tool responses or state).
 
 ```python
 # Conceptual Code: Hierarchical Research Task
@@ -341,8 +341,8 @@ report_writer = LlmAgent(
 * **Structure:** Typically involves two agents within a [`SequentialAgent`](workflow-agents/sequential-agents.md): a Generator and a Critic/Reviewer.
 * **Goal:** Improve the quality or validity of generated output by having a dedicated agent review it.
 * **ADK Primitives Used:**
-    *   **Workflow:** `SequentialAgent` ensures generation happens before review.
-    *   **Communication:** **Shared Session State** (Generator uses `output_key` to save output; Reviewer reads that state key). The Reviewer might save its feedback to another state key for subsequent steps.
+    * **Workflow:** `SequentialAgent` ensures generation happens before review.
+    * **Communication:** **Shared Session State** (Generator uses `output_key` to save output; Reviewer reads that state key). The Reviewer might save its feedback to another state key for subsequent steps.
 
 ```python
 # Conceptual Code: Generator-Critic
@@ -419,13 +419,13 @@ refinement_loop = LoopAgent(
 
 ### Human-in-the-Loop Pattern
 
-*   **Structure:** Integrates human intervention points within an agent workflow.
-*   **Goal:** Allow for human oversight, approval, correction, or tasks that AI cannot perform.
-*   **ADK Primitives Used (Conceptual):**
-    *   **Interaction:** Can be implemented using a custom **Tool** that pauses execution and sends a request to an external system (e.g., a UI, ticketing system) waiting for human input. The tool then returns the human's response to the agent.
-    *   **Workflow:** Could use **LLM-Driven Delegation** (`transfer_to_agent`) targeting a conceptual "Human Agent" that triggers the external workflow, or use the custom tool within an `LlmAgent`.
-    *   **State/Callbacks:** State can hold task details for the human; callbacks can manage the interaction flow.
-    *   **Note:** ADK doesn't have a built-in "Human Agent" type, so this requires custom integration.
+* **Structure:** Integrates human intervention points within an agent workflow.
+* **Goal:** Allow for human oversight, approval, correction, or tasks that AI cannot perform.
+* **ADK Primitives Used (Conceptual):**
+    * **Interaction:** Can be implemented using a custom **Tool** that pauses execution and sends a request to an external system (e.g., a UI, ticketing system) waiting for human input. The tool then returns the human's response to the agent.
+    * **Workflow:** Could use **LLM-Driven Delegation** (`transfer_to_agent`) targeting a conceptual "Human Agent" that triggers the external workflow, or use the custom tool within an `LlmAgent`.
+    * **State/Callbacks:** State can hold task details for the human; callbacks can manage the interaction flow.
+    * **Note:** ADK doesn't have a built-in "Human Agent" type, so this requires custom integration.
 
 ```python
 # Conceptual Code: Using a Tool for Human Approval

@@ -1,4 +1,4 @@
-## Why to Evaluate Agents
+# Why Evaluate Agents
 
 In traditional software development, unit tests and integration tests provide confidence that code functions as expected and remains stable through changes. These tests provide a clear "pass/fail" signal, guiding further development. However, LLM agents introduce a level of variability that makes traditional testing approaches insufficient.
 
@@ -58,14 +58,12 @@ This approach involves creating individual test files, each representing a singl
 
 * `query:` This is the user query.  
 * `expected_tool_use`: The tool call(s) that we expect the agent to make in order to respond correctly to the user `query`.  
-* `expected_intermediate_agent_responses`:  This field contains the natural language responses produced by the agent as it progresses towards a final answer. These responses are typical in multi-agent systems where a root agent relies on child agents to accomplish a task. While generally not directly relevant to end-users, these intermediate responses are valuable for developers. They provide insight into the agent's reasoning path and help verify that it followed the correct steps to generate the final response.   
+* `expected_intermediate_agent_responses`:  This field contains the natural language responses produced by the agent as it progresses towards a final answer. These responses are typical in multi-agent systems where a root agent relies on child agents to accomplish a task. While generally not directly relevant to end-users, these intermediate responses are valuable for developers. They provide insight into the agent's reasoning path and help verify that it followed the correct steps to generate the final response.
 * `reference`: The expected final response from the model.
-
 
 You can give the file any name for example `evaluation.test.json`.The framework only checks for the `.test.json` suffix, and the preceding part of the filename is not constrained. Here is a test file with a few examples:
 
-```
-
+```json
 [
   {
     "query": "hi",
@@ -104,8 +102,7 @@ An evalset file contains multiple "evals," each representing a distinct session.
 
 Creating evalsets manually can be complex, therefore UI tools are provided to help capture relevant sessions and easily convert them into evals within your evalset. Learn more about using the web UI for evaluation below. Here is an example evalset containing two sessions.
 
-```
-
+```json
 [
   {
     "name": "roll_16_sided_dice_and_then_check_if_6151953_is_prime",
@@ -203,7 +200,7 @@ If no evaluation criteria are provided, the following default configuration is u
 
 Here is an example of a `test_config.json` file specifying custom evaluation criteria:
 
-```
+```json
 {
   "criteria": {
     "tool_trajectory_avg_score": 1.0,
@@ -212,7 +209,7 @@ Here is an example of a `test_config.json` file specifying custom evaluation cri
 }
 ```
 
-## How to run Evaluation with the ADK 
+## How to run Evaluation with the ADK
 
 As a developer, you can evaluate your agents using the ADK in the following ways:
 
@@ -240,14 +237,13 @@ Steps to run evaluation via the web ui:
 
 You can also use **`pytest`** to run test files as part of your integration tests.
 
-#### Example Command:
+#### Example Command
 
-```
-
+```shell
 pytest tests/integration/
 ```
 
-#### Example Test Code:
+#### Example Test Code
 
 Here is an example of a `pytest` test case that runs a single test file:
 
@@ -264,7 +260,7 @@ This approach allows you to integrate agent evaluations into your CI/CD pipeline
 
 Here is a sample session json file:
 
-```
+```json
 {
   "id": "test_id",
   "app_name": "trip_planner_agent",
@@ -300,7 +296,7 @@ You can also run evaluation of an eval set file through the command line interfa
 
 Here is the command:
 
-```
+```shell
 adk eval \
     <AGENT_MODULE_FILE_PATH> \
     <EVAL_SET_FILE_PATH> \
@@ -310,7 +306,7 @@ adk eval \
 
 For example:
 
-```
+```shell
 adk eval \
     samples_for_testing/hello_world \
     samples_for_testing/hello_world/hello_world_eval_set_001.evalset.json
@@ -319,7 +315,7 @@ adk eval \
 Here are the details for each command line argument:
 
 * `AGENT_MODULE_FILE_PATH`: The path to the `init.py` file that contains a module by the name "agent". "agent" module contains a `root_agent`.  
-* `EVAL_SET_FILE_PATH`: The path to evaluations file(s). You can specify one or more eval set file paths. For each file, all evals will be run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name, demarcated by a colon `:` .   
+* `EVAL_SET_FILE_PATH`: The path to evaluations file(s). You can specify one or more eval set file paths. For each file, all evals will be run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name, demarcated by a colon `:` .
 * For example: `sample_eval_set_file.json:eval_1,eval_2,eval_3`  
   `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`  
 * `CONFIG_FILE_PATH`: The path to the config file.  

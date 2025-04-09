@@ -52,17 +52,17 @@ async def call_agent_async(query):
                         has_specific_part = True
                     # Also print any text parts found in any event for debugging
                     elif part.text and not part.text.isspace():
-                         print(f"  Text: '{part.text.strip()}'")
-                         # Do not set has_specific_part=True here, as we want the final response logic below
+                        print(f"  Text: '{part.text.strip()}'")
+                        # Do not set has_specific_part=True here, as we want the final response logic below
 
             # --- Check for final response AFTER specific parts ---
             # Only consider it final if it doesn't have the specific code parts we just handled
             if not has_specific_part and event.is_final_response():
-                 if event.content and event.content.parts and event.content.parts[0].text:
-                     final_response_text = event.content.parts[0].text.strip()
-                     print(f"==> Final Agent Response: {final_response_text}")
-                 else:
-                      print(f"==> Final Agent Response: [No text content in final event]")
+                if event.content and event.content.parts and event.content.parts[0].text:
+                    final_response_text = event.content.parts[0].text.strip()
+                    print(f"==> Final Agent Response: {final_response_text}")
+                else:
+                    print("==> Final Agent Response: [No text content in final event]")
 
 
     except Exception as e:
@@ -79,11 +79,11 @@ async def main():
 try:
     asyncio.run(main())
 except RuntimeError as e:
-     # Handle specific error when running asyncio.run in an already running loop (like Jupyter/Colab)
-     if "cannot be called from a running event loop" in str(e):
-         print("\nRunning in an existing event loop (like Colab/Jupyter).")
-         print("Please run `await main()` in a notebook cell instead.")
-         # If in an interactive environment like a notebook, you might need to run:
-         # await main()
-     else:
-         raise e # Re-raise other runtime errors
+    # Handle specific error when running asyncio.run in an already running loop (like Jupyter/Colab)
+    if "cannot be called from a running event loop" in str(e):
+        print("\nRunning in an existing event loop (like Colab/Jupyter).")
+        print("Please run `await main()` in a notebook cell instead.")
+        # If in an interactive environment like a notebook, you might need to run:
+        # await main()
+    else:
+        raise e # Re-raise other runtime errors

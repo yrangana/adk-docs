@@ -323,5 +323,5 @@ if __name__ == "__main__":
 
 ```python
 # Full runnable code for the StoryFlowAgent example
---8<-- "examples/python/snippets/agents/custom-agent/storyflow-agent.py"
+--8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py"
 ```

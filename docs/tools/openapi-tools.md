@@ -84,5 +84,5 @@ Follow these steps to integrate an OpenAPI spec into your agent:
 This example demonstrates generating tools from a simple Pet Store OpenAPI spec (using `httpbin.org` for mock responses) and interacting with them via an agent.
 
 ```python title="openapi_example.py"
---8<-- "examples/python/snippets/tools/openapi-tool.py"
+--8<-- "examples/python/snippets/tools/openapi_tool.py"
 ```

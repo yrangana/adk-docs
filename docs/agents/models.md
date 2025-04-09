@@ -22,30 +22,36 @@ The `google-genai` library, used internally by ADK for Gemini, can connect throu
 1. **Google AI Studio:**
     * **Use Case:** Best for rapid prototyping and development.
     * **Setup:** Typically requires an API key set as an environment variable:
-    
+
     ```shell
     export GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"
     export GOOGLE_GENAI_USE_VERTEXAI=FALSE
     ```
-    
+
     * **Models:** Find available models on the [Google AI for Developers site](https://ai.google.dev/gemini-api/docs/models).
 
 2. **Vertex AI:**
     * **Use Case:** Recommended for production applications, leveraging Google Cloud infrastructure.
     * **Setup:**
         * Authenticate using Application Default Credentials (ADC):
+
             ```shell
             gcloud auth application-default login
             ```
+
         * Set your Google Cloud project and location:
+
             ```shell
             export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
             export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
             ```
+
         * Explicitly tell the library to use Vertex AI:
+
             ```shell
             export GOOGLE_GENAI_USE_VERTEXAI=TRUE
             ```
+
     * **Models:** Find available model IDs in the [Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).
 
 **Example:**
@@ -92,13 +98,17 @@ To access a vast range of LLMs from providers like OpenAI, Anthropic (non-Vertex
 2. **Set Provider API Keys:** Configure API keys as environment variables for the specific providers you intend to use.
 
     * *Example for OpenAI:*
+
         ```shell
         export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
         ```
+
     * *Example for Anthropic (non-Vertex AI):*
+
         ```shell
         export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
         ```
+
     * *Consult the [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers) for the correct environment variable names for other providers.*
 
         **Example:**
@@ -126,7 +136,6 @@ To access a vast range of LLMs from providers like OpenAI, Anthropic (non-Vertex
         )
         ```
 
-
 ## Using Open & Local Models via LiteLLM
 
 For maximum control, cost savings, privacy, or offline use cases, you can run open-source models locally or self-host them and integrate them using LiteLLM.
@@ -141,9 +150,11 @@ For maximum control, cost savings, privacy, or offline use cases, you can run op
 
 1. Install Ollama.
 2. Pull the desired model (e.g., Google's Gemma):
+
     ```shell
     ollama pull gemma:2b
     ```
+
 3. Ensure the Ollama server is running (usually happens automatically after installation or by running `ollama serve`).
 
     **Example:**
@@ -168,9 +179,9 @@ Tools like [vLLM](https://github.com/vllm-project/vllm) allow you to host models
 
 **Setup:**
 
-1.  **Deploy Model:** Deploy your chosen model using vLLM (or a similar tool). Note the API base URL (e.g., `https://your-vllm-endpoint.run.app/v1`).
-    *   *Important for ADK Tools:* When deploying, ensure the serving tool supports and enables OpenAI-compatible tool/function calling. For vLLM, this might involve flags like `--enable-auto-tool-choice` and potentially a specific `--tool-call-parser`, depending on the model. Refer to the vLLM documentation on Tool Use.
-2.  **Authentication:** Determine how your endpoint handles authentication (e.g., API key, bearer token).
+1. **Deploy Model:** Deploy your chosen model using vLLM (or a similar tool). Note the API base URL (e.g., `https://your-vllm-endpoint.run.app/v1`).
+    * *Important for ADK Tools:* When deploying, ensure the serving tool supports and enables OpenAI-compatible tool/function calling. For vLLM, this might involve flags like `--enable-auto-tool-choice` and potentially a specific `--tool-call-parser`, depending on the model. Refer to the vLLM documentation on Tool Use.
+2. **Authentication:** Determine how your endpoint handles authentication (e.g., API key, bearer token).
 
     **Integration Example:**
 
@@ -223,16 +234,21 @@ For enterprise-grade scalability, reliability, and integration with Google Cloud
 
 Ensure your environment is configured for Vertex AI:
 
-1.  **Authentication:** Use Application Default Credentials (ADC):
+1. **Authentication:** Use Application Default Credentials (ADC):
+
     ```shell
     gcloud auth application-default login
     ```
-2.  **Environment Variables:** Set your project and location:
+
+2. **Environment Variables:** Set your project and location:
+
     ```shell
     export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
     export GOOGLE_CLOUD_LOCATION="YOUR_ENDPOINT_LOCATION" # e.g., us-central1
     ```
-3.  **Enable Vertex Backend:** Crucially, ensure the `google-genai` library targets Vertex AI:
+
+3. **Enable Vertex Backend:** Crucially, ensure the `google-genai` library targets Vertex AI:
+
     ```shell
     export GOOGLE_GENAI_USE_VERTEXAI=TRUE
     ```
@@ -293,12 +309,15 @@ Some providers, like Anthropic, make their models available directly through Ver
 
 **Setup:**
 
-1.  **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
-2.  **Install Provider Library:** Install the necessary client library configured for Vertex AI.
+1. **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+2. **Install Provider Library:** Install the necessary client library configured for Vertex AI.
+
     ```shell
     pip install "anthropic[vertex]"
     ```
-3.  **Register Model Class:** Add this code near the start of your application, *before* creating an agent using the Claude model string:
+
+3. **Register Model Class:** Add this code near the start of your application, *before* creating an agent using the Claude model string:
+
     ```python
     # Required for using Claude model strings directly via Vertex AI with LlmAgent
     from google.adk.models.anthropic_llm import Claude

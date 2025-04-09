@@ -94,7 +94,6 @@ capital_agent = LlmAgent(
 
 Learn more about Tools in the [Tools](../tools/index.md) section.
 
-
 ## Advanced Configuration & Control
 
 Beyond the core parameters, `LlmAgent` offers several options for finer control:

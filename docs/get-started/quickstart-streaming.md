@@ -78,7 +78,7 @@ To run your agent, you'll need to set up a Gemini API Key.
 
 **.env**
 
-```
+```shell
 GOOGLE_API_KEY=YOUR_API_KEY_HERE # Replace with your API Key
 GOOGLE_GENAI_USE_VERTEXAI=0
 ```
@@ -87,13 +87,13 @@ GOOGLE_GENAI_USE_VERTEXAI=0
 
 Now it's ready to try the agent. Run the following command to launch the **dev UI**. First, make sure to set the current directory to `app`:
 
-```
+```shell
 cd app
 ```
 
 Then, run the dev UI:
 
-```
+```shell
 adk web
 ```
 
@@ -128,7 +128,7 @@ We have checked that our basic search agent works with the ADK Streaming. In the
 
 Add `static` directory under `app`, and add `main.py` and `index.html` as empty files, as in the following structure:
 
-```
+```console
 adk-streaming/  # Project folder
 └── app/ # the web app folder
     ├── main.py # FastAPI web app
@@ -426,16 +426,15 @@ This HTML file sets up a basic webpage with:
 
 1\. **Navigate to the Correct Directory:**
 
-   To run your agent effectively, you need to be in the **app folder (`adk-streaming/app`)**   
+   To run your agent effectively, you need to be in the **app folder (`adk-streaming/app`)**
 
 2\. **Start the Fast API**: Run the following command to start CLI interface with
 
-```
+```console
 uvicorn main:app --reload
 ```
 
 3\. **Access the UI:** Once the UI server starts, the terminal will display a local URL (e.g., [http://localhost:8000](http://localhost:8501)). Click this link to open the UI in your browser.
-   
 
 Now you should see the UI like this:
 
