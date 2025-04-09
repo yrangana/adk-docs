@@ -30,17 +30,9 @@ pip install google-adk
 
 ## 2. Create Agent Project {#create-agent-project}
 
-Using the terminal, create the folder structure:
+### Project structure
 
-```bash
-mkdir multi_tool_agent/
-touch \
-    multi_tool_agent/__init__.py \
-    multi_tool_agent/agent.py \
-    multi_tool_agent/.env
-```
-
-Your structure:
+You will need to create the following project structure:
 
 ```console
 parent_folder/
@@ -50,25 +42,55 @@ parent_folder/
         .env
 ```
 
-Copy paste the following code to the respective files:
+Create the folder `multi_tool_agent`:
+
+```bash
+mkdir multi_tool_agent/
+```
+
+### `__init__.py`
+
+Now create an `__init__.py` file in the folder:
+
+```shell
+echo "from . import agent" > multi_tool_agent/__init__.py
+```
+
+Your `__init__.py` should now look like this:
 
 ```python title="multi_tool_agent/__init__.py"
 --8<-- "examples/python/snippets/get-started/multi_tool_agent/__init__.py"
 ```
 
+### `agent.py`
+
+Create an `agent.py` file in the same folder:
+
+```shell
+touch multi_tool_agent/agent.py
+```
+
+Copy and paste the following code into `agent.py`:
+
 ```python title="multi_tool_agent/agent.py"
 --8<-- "examples/python/snippets/get-started/multi_tool_agent/agent.py"
 ```
 
-For `.env` below, just copy and paste the following code for now, as more instructions are describe in the next section on [Setup the model](#setup-the-model).
+### `.env`
+
+Create a `.env` file in the same folder:
+
+```shell
+touch multi_tool_agent/.env
+```
+
+You can just copy and paste the following code for now, as more instructions are describe in the next section on [Setup the model](#setup-the-model).
 
 ```python title="multi_tool_agent/.env"
 --8<-- "examples/python/snippets/get-started/multi_tool_agent/.env"
 ```
 
-
 ![intro_components.png](../assets/quickstart-flow-tool.png)
-
 
 ## 3. Setup the model {#setup-the-model}
 
@@ -118,7 +140,7 @@ There are multiple ways to interact with your agent:
 === "Dev UI (adk web)"
     Run the following command to launch the **dev UI**.
 
-    ```
+    ```shell
     adk web
     ```
 
@@ -146,7 +168,6 @@ There are multiple ways to interact with your agent:
     
         Currently only `gemini-2.0-flash-exp` supports talking to your agent via audio/video, and can be used either with your API key from Google AI Studio or via [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal-live-api).
 
-
 === "Terminal (adk run)"
 
     Run the following command, to chat with your Google Search agent.
@@ -166,7 +187,6 @@ There are multiple ways to interact with your agent:
     ![adk-api-server.png](../assets/adk-api-server.png)
 
     To learn how to use `adk api_server`, see the [documentation on local testing](local-testing.md).
-
 
 ### 📝 Example prompts to try
 
