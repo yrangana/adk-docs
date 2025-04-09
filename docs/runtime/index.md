@@ -10,7 +10,7 @@ Think of the Runtime as the **"engine"** of your agentic application. You define
 
 At its heart, the ADK Runtime operates on an **Event Loop**. This loop facilitates a back-and-forth communication between the `Runner` component and your defined "Execution Logic" (which includes your Agents, the LLM calls they make, Callbacks, and Tools).
 
-<img src="../../assets/event-loop.png" alt="Event Loop">
+![intro_components.png](../assets/event-loop.png)
 
 In simple terms:
 
@@ -33,8 +33,8 @@ The `Runner` acts as the central coordinator for a single user invocation. Its r
 1. **Initiation:** Receives the end user's query (`new_message`) and typically appends it to the session history via the `SessionService`.
 2. **Kick-off:** Starts the event generation process by calling the main agent's execution method (e.g., `agent_to_run.run_async(...)`).
 3. **Receive & Process:** Waits for the agent logic to `yield` an `Event`. Upon receiving an event, the Runner **promptly processes** it. This involves:
-   * Using configured `Services` (`SessionService`, `ArtifactService`, `MemoryService`) to commit changes indicated in `event.actions` (like `state_delta`, `artifact_delta`).
-   * Performing other internal bookkeeping.
+      * Using configured `Services` (`SessionService`, `ArtifactService`, `MemoryService`) to commit changes indicated in `event.actions` (like `state_delta`, `artifact_delta`).
+      * Performing other internal bookkeeping.
 4. **Yield Upstream:** Forwards the processed event onwards (e.g., to the calling application or UI for rendering).
 5. **Iterate:** Signals the agent logic that processing is complete for the yielded event, allowing it to resume and generate the *next* event.
 
@@ -112,41 +112,41 @@ Several components work together within the ADK Runtime to execute an agent invo
 
 1. ### `Runner`
 
-   * **Role:** The main entry point and orchestrator for a single user query (`run_async`).
-   * **Function:** Manages the overall Event Loop, receives events yielded by the Execution Logic, coordinates with Services to process and commit event actions (state/artifact changes), and forwards processed events upstream (e.g., to the UI). It essentially drives the conversation turn by turn based on yielded events. (Defined in `google.adk.runners.runner.py`).
+      * **Role:** The main entry point and orchestrator for a single user query (`run_async`).
+      * **Function:** Manages the overall Event Loop, receives events yielded by the Execution Logic, coordinates with Services to process and commit event actions (state/artifact changes), and forwards processed events upstream (e.g., to the UI). It essentially drives the conversation turn by turn based on yielded events. (Defined in `google.adk.runners.runner.py`).
 
 2. ### Execution Logic Components
 
-   * **Role:** The parts containing your custom code and the core agent capabilities.
-   * **Components:**
-     * `Agent` (`BaseAgent`, `LlmAgent`, etc.): Your primary logic units that process information and decide on actions. They implement the `_run_async_impl` method which yields events.
-     * `Tools` (`BaseTool`, `FunctionTool`, `AgentTool`, etc.): External functions or capabilities used by agents (often `LlmAgent`) to interact with the outside world or perform specific tasks. They execute and return results, which are then wrapped in events.
-     * `Callbacks` (Functions): User-defined functions attached to agents (e.g., `before_agent_callback`, `after_model_callback`) that hook into specific points in the execution flow, potentially modifying behavior or state, whose effects are captured in events.
-   * **Function:** Perform the actual thinking, calculation, or external interaction. They communicate their results or needs by **yielding `Event` objects** and pausing until the Runner processes them.
+      * **Role:** The parts containing your custom code and the core agent capabilities.
+      * **Components:**
+      * `Agent` (`BaseAgent`, `LlmAgent`, etc.): Your primary logic units that process information and decide on actions. They implement the `_run_async_impl` method which yields events.
+      * `Tools` (`BaseTool`, `FunctionTool`, `AgentTool`, etc.): External functions or capabilities used by agents (often `LlmAgent`) to interact with the outside world or perform specific tasks. They execute and return results, which are then wrapped in events.
+      * `Callbacks` (Functions): User-defined functions attached to agents (e.g., `before_agent_callback`, `after_model_callback`) that hook into specific points in the execution flow, potentially modifying behavior or state, whose effects are captured in events.
+      * **Function:** Perform the actual thinking, calculation, or external interaction. They communicate their results or needs by **yielding `Event` objects** and pausing until the Runner processes them.
 
 3. ### `Event`
 
-   * **Role:** The message passed back and forth between the `Runner` and the Execution Logic.
-   * **Function:** Represents an atomic occurrence (user input, agent text, tool call/result, state change request, control signal). It carries both the content of the occurrence and the intended side effects (`actions` like `state_delta`). (Defined in `google.adk.events.event.py`).
+      * **Role:** The message passed back and forth between the `Runner` and the Execution Logic.
+      * **Function:** Represents an atomic occurrence (user input, agent text, tool call/result, state change request, control signal). It carries both the content of the occurrence and the intended side effects (`actions` like `state_delta`). (Defined in `google.adk.events.event.py`).
 
 4. ### `Services`
 
-   * **Role:** Backend components responsible for managing persistent or shared resources. Used primarily by the `Runner` during event processing.
-   * **Components:**
-     * `SessionService` (`BaseSessionService`, `InMemorySessionService`, etc.): Manages `Session` objects, including saving/loading them, applying `state_delta` to the session state, and appending events to the `event history`.
-     * `ArtifactService` (`BaseArtifactService`, `InMemoryArtifactService`, `GcsArtifactService`, etc.): Manages the storage and retrieval of binary artifact data. Although `save_artifact` is called via context during execution logic, the `artifact_delta` in the event confirms the action for the Runner/SessionService.
-     * `MemoryService` (`BaseMemoryService`, etc.): (Optional) Manages long-term semantic memory across sessions for a user.
-   * **Function:** Provide the persistence layer. The `Runner` interacts with them to ensure changes signaled by `event.actions` are reliably stored *before* the Execution Logic resumes.
+      * **Role:** Backend components responsible for managing persistent or shared resources. Used primarily by the `Runner` during event processing.
+      * **Components:**
+      * `SessionService` (`BaseSessionService`, `InMemorySessionService`, etc.): Manages `Session` objects, including saving/loading them, applying `state_delta` to the session state, and appending events to the `event history`.
+      * `ArtifactService` (`BaseArtifactService`, `InMemoryArtifactService`, `GcsArtifactService`, etc.): Manages the storage and retrieval of binary artifact data. Although `save_artifact` is called via context during execution logic, the `artifact_delta` in the event confirms the action for the Runner/SessionService.
+      * `MemoryService` (`BaseMemoryService`, etc.): (Optional) Manages long-term semantic memory across sessions for a user.
+      * **Function:** Provide the persistence layer. The `Runner` interacts with them to ensure changes signaled by `event.actions` are reliably stored *before* the Execution Logic resumes.
 
 5. ### `Session`
 
-   * **Role:** A data container holding the state and history for *one specific conversation* between a user and the application.
-   * **Function:** Stores the current `state` dictionary, the list of all past `events` (`event history`), and references to associated artifacts. It's the primary record of the interaction, managed by the `SessionService`. (Defined in `google.adk.sessions.session.py`).
+      * **Role:** A data container holding the state and history for *one specific conversation* between a user and the application.
+      * **Function:** Stores the current `state` dictionary, the list of all past `events` (`event history`), and references to associated artifacts. It's the primary record of the interaction, managed by the `SessionService`. (Defined in `google.adk.sessions.session.py`).
 
 6. ### `Invocation`
 
-   * **Role:** A conceptual term representing everything that happens in response to a *single* user query, from the moment the `Runner` receives it until the agent logic finishes yielding events for that query.
-   * **Function:** An invocation might involve multiple agent runs (if using agent transfer or `AgentTool`), multiple LLM calls, tool executions, and callback executions, all tied together by a single `invocation_id` within the `InvocationContext`.
+      * **Role:** A conceptual term representing everything that happens in response to a *single* user query, from the moment the `Runner` receives it until the agent logic finishes yielding events for that query.
+      * **Function:** An invocation might involve multiple agent runs (if using agent transfer or `AgentTool`), multiple LLM calls, tool executions, and callback executions, all tied together by a single `invocation_id` within the `InvocationContext`.
 
 These players interact continuously through the Event Loop to process a user's request.
 
@@ -154,7 +154,7 @@ These players interact continuously through the Event Loop to process a user's r
 
 Let's trace a simplified flow for a typical user query that involves an LLM agent calling a tool:
 
-<img src="../../assets/invocation-flow.png" alt="Invocation Flow">
+![intro_components.png](../assets/invocation-flow.png)
 
 ### Step-by-Step Breakdown
 

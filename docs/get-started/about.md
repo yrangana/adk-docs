@@ -96,6 +96,8 @@ agentic applications:
     services, allowing agents to recall user information across multiple
     sessions.
 
+![intro_components.png](../assets/adk-lifecycle.png)
+
 ## Get Started
 
 * Ready to build your first agent? [Try the quickstart](./quickstart.md)

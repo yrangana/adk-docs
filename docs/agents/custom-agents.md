@@ -22,6 +22,10 @@ While the standard [Workflow Agents](workflow-agents/index.md) (`SequentialAgent
 * **Dynamic Agent Selection:** Choosing which sub-agent(s) to run next based on dynamic evaluation of the situation or input.
 * **Unique Workflow Patterns:** Implementing orchestration logic that doesn't fit the standard sequential, parallel, or loop structures.
 
+
+![intro_components.png](../assets/custom-agent-flow.png)
+
+
 ## Implementing Custom Logic:
 
 The heart of any custom agent is the `_run_async_impl` method. This is where you define its unique behavior.

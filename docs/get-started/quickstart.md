@@ -66,6 +66,10 @@ For `.env` below, just copy and paste the following code for now, as more instru
 --8<-- "examples/python/snippets/get-started/multi_tool_agent/.env"
 ```
 
+
+![intro_components.png](../assets/quickstart-flow-tool.png)
+
+
 ## 3. Setup the model {#setup-the-model}
 
 Your agent's ability to understand user requests and generate responses is

@@ -10,6 +10,8 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
 * Before sending a request to, or after receiving a response from, the Large Language Model (LLM).  
 * Before executing a tool (like a Python function or another agent) or after it finishes.
 
+![intro_components.png](../assets/callback_flow.png)
+
 **Why use them?** Callbacks unlock significant flexibility and enable advanced agent capabilities:
 
 * **Observe & Debug:** Log detailed information at critical steps for monitoring and troubleshooting.  
