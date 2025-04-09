@@ -101,7 +101,7 @@ Open the URL provided (usually `http://localhost:8000` or
 `http://127.0.0.1:8000`) **directly in your browser**. This connection stays
 entirely on your local machine. Select `basic_search_agent`.
 
-### 📝 Try with text
+### Try with text
 
 Try the following prompts by typing them in the UI.
 
@@ -112,7 +112,7 @@ Try the following prompts by typing them in the UI.
 
 The agent will use the google_search tool to get the latest information to answer those questions.
 
-### 📝 Try with voice and video
+### Try with voice and video
 
 Now, click the microphone button to enable the voice input, and ask the same question in voice. You will hear the answer in voice in real-time.
 
@@ -122,9 +122,13 @@ Also, click the camera button to enable the video input, and ask questions like 
 
 Stop `adk web` by pressing `Ctrl-C` on the console.
 
+### Note on ADK Streaming
+
+We have checked that our basic search agent works with the ADK Streaming. The following features will be supported in the future versions of the ADK Streaming: Callback, LongRunningTool, ExampleTool, and Shell agent (e.g. SequentialAgent).
+
 ## 5. Building a Custom Streaming App (Optional) {#5.-build-custom-app}
 
-We have checked that our basic search agent works with the ADK Streaming. In the following sections, we will learn how to build your own web application capable of the streaming communication using [FastAPI](https://fastapi.tiangolo.com/).
+In the following sections, we will learn how to build your own web application capable of the streaming communication using [FastAPI](https://fastapi.tiangolo.com/).
 
 Add `static` directory under `app`, and add `main.py` and `index.html` as empty files, as in the following structure:
 
