@@ -2,7 +2,7 @@ import logging
 from typing import AsyncGenerator
 from typing_extensions import override
 
-from google.adk.agents import Agent, LlmAgent, BaseAgent, LoopAgent, SequentialAgent
+from google.adk.agents import LlmAgent, BaseAgent, LoopAgent, SequentialAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.genai import types
 from google.adk.sessions import InMemorySessionService
@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 APP_NAME = "story_app"
 USER_ID = "12345"
 SESSION_ID = "123344"
-GEMINI_2_FLASH = "gemini-2.0-flash-001"
+GEMINI_2_FLASH = "gemini-2.0-flash-exp"
 
 # --- Configure Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -240,7 +240,9 @@ def call_agent(user_input_topic: str):
     Sends a new topic to the agent (overwriting the initial one if needed)
     and runs the workflow.
     """
-    current_session = session_service.get_session(APP_NAME, USER_ID, SESSION_ID)
+    current_session = session_service.get_session(app_name=APP_NAME, 
+                                                  user_id=USER_ID, 
+                                                  session_id=SESSION_ID)
     if not current_session:
         logger.error("Session not found!")
         return
@@ -260,7 +262,9 @@ def call_agent(user_input_topic: str):
     print("\n--- Agent Interaction Result ---")
     print("Agent Final Response: ", final_response)
 
-    final_session = session_service.get_session(APP_NAME, USER_ID, SESSION_ID)
+    final_session = session_service.get_session(app_name=APP_NAME, 
+                                                user_id=USER_ID, 
+                                                session_id=SESSION_ID)
     print("Final Session State:")
     import json
     print(json.dumps(final_session.state, indent=2))

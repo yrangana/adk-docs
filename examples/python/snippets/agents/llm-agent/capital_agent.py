@@ -1,5 +1,4 @@
 # --- Full example code demonstrating LlmAgent with Tools vs. Output Schema ---
-import asyncio
 import json # Needed for pretty printing dicts
 
 from google.adk.agents import LlmAgent
@@ -13,7 +12,7 @@ APP_NAME = "agent_comparison_app"
 USER_ID = "test_user_456"
 SESSION_ID_TOOL_AGENT = "session_tool_agent_xyz"
 SESSION_ID_SCHEMA_AGENT = "session_schema_agent_xyz"
-MODEL_NAME = "gemini-2.0-flash-001"
+MODEL_NAME = "gemini-2.0-flash-exp"
 
 # --- 2. Define Schemas ---
 
@@ -117,7 +116,9 @@ async def call_agent_and_print(
 
     print(f"<<< Agent '{agent_instance.name}' Response: {final_response_content}")
 
-    current_session = session_service.get_session(APP_NAME, USER_ID, session_id)
+    current_session = session_service.get_session(app_name=APP_NAME,
+                                                  user_id=USER_ID,
+                                                  session_id=session_id)
     stored_output = current_session.state.get(agent_instance.output_key)
 
     # Pretty print if the stored output looks like JSON (likely from output_schema)

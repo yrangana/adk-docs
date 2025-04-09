@@ -220,7 +220,7 @@ These are standard `LlmAgent` definitions, responsible for specific tasks. Their
 ```python
 # agent.py (LLM Agent Definitions part)
 
-GEMINI_FLASH = "gemini-1.5-flash" # Define model constant
+GEMINI_FLASH = "gemini-2.0-flash-exp" # Define model constant
 
 story_generator = LlmAgent(
     name="StoryGenerator", model=GEMINI_FLASH,

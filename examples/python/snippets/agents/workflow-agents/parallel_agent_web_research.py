@@ -8,7 +8,7 @@ from google.genai import types
 APP_NAME = "parallel_research_app"
 USER_ID = "research_user_01"
 SESSION_ID = "parallel_research_session"
-GEMINI_MODEL = "gemini-2.0-flash-001"
+GEMINI_MODEL = "gemini-2.0-flash-exp"
 
 # --- Define Researcher Sub-Agents ---
 
