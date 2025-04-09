@@ -1,121 +1,77 @@
-# Design Patterns and Best Practices
+# Design Patterns and Best Practices for Callbacks
+
+Callbacks offer powerful hooks into the agent lifecycle. Here are common design patterns illustrating how to leverage them effectively in ADK, followed by best practices for implementation.
 
 ## Design Patterns
 
-Callbacks provide a versatile toolkit for enhancing agent behavior. Here are some common ways developers leverage them in the ADK, often combining different callback types:
+These patterns demonstrate typical ways to enhance or control agent behavior using callbacks:
 
-### Guardrails & Policy Enforcement
+### 1. Guardrails & Policy Enforcement
 
-#### Pattern
+* **Pattern:** Intercept requests before they reach the LLM or tools to enforce rules.
+* **How:** Use `before_model_callback` to inspect the `LlmRequest` prompt or `before_tool_callback` to inspect tool arguments (`args`). If a policy violation is detected (e.g., forbidden topics, profanity), return a predefined response (`LlmResponse` or `dict`) to block the operation and optionally update `context.state` to log the violation.
+* **Example:** A `before_model_callback` checks `llm_request.contents` for sensitive keywords and returns a standard "Cannot process this request" `LlmResponse` if found, preventing the LLM call.
 
-Use `before_model_callback` to inspect the `LlmRequest`'s contents (prompts). If the content violates a policy (e.g., contains profanity, asks for restricted information), return a predefined `LlmResponse` to block the request and prevent it from reaching the LLM. The callback can also update the `callback_context.state` to flag the violation.  
+### 2. Dynamic State Management
 
-#### Example
+* **Pattern:** Read from and write to session state within callbacks to make agent behavior context-aware and pass data between steps.
+* **How:** Access `callback_context.state` or `tool_context.state`. Modifications (`state['key'] = value`) are automatically tracked in the subsequent `Event.actions.state_delta` for persistence by the `SessionService`.
+* **Example:** An `after_tool_callback` saves a `transaction_id` from the tool's result to `tool_context.state['last_transaction_id']`. A later `before_agent_callback` might read `state['user_tier']` to customize the agent's greeting.
 
-The profanity checker example uses `before_model_callback` to scan text and returns a "No bad word allowed" `LlmResponse` if profanity is detected, while also setting `state['profanity_trigger'] = True`.
+### 3. Logging and Monitoring
 
-### Dynamic State Management
+* **Pattern:** Add detailed logging at specific lifecycle points for observability and debugging.
+* **How:** Implement callbacks (e.g., `before_agent_callback`, `after_tool_callback`, `after_model_callback`) to print or send structured logs containing information like agent name, tool name, invocation ID, and relevant data from the context or arguments.
+* **Example:** Log messages like `INFO: [Invocation: e-123] Before Tool: search_api - Args: {'query': 'ADK'}`.
 
-#### Pattern
+### 4. Caching
 
-Use any of the callbacks to read from or write to `callback_context.state` (or `tool_context.state`). This allows the agent's behavior to adapt based on previous interactions or results stored in the state. State changes made via `state['key'] = value` are automatically tracked in `event.actions.state_delta`.  
+* **Pattern:** Avoid redundant LLM calls or tool executions by caching results.
+* **How:** In `before_model_callback` or `before_tool_callback`, generate a cache key based on the request/arguments. Check `context.state` (or an external cache) for this key. If found, return the cached `LlmResponse` or result `dict` directly, skipping the actual operation. If not found, allow the operation to proceed and use the corresponding `after_` callback (`after_model_callback`, `after_tool_callback`) to store the new result in the cache using the key.
+*   **Example:** `before_tool_callback` for `get_stock_price(symbol)` checks `state[f"cache:stock:{symbol}"]`. If present, returns the cached price; otherwise, allows the API call and `after_tool_callback` saves the result to the state key.
 
-#### Example
+### 5. Request/Response Modification
 
-An `after_tool_callback` could extract a transaction ID from a tool's response and save it to `tool_context.state['last_transaction_id']` for later reference by another agent or tool. A `before_agent_callback` could check `state['user_preferences']` to tailor the agent's initial greeting. The `output_key` feature in `LlmAgent` implicitly uses state updates after the agent runs.
+* **Pattern:** Alter data just before it's sent to the LLM/tool or just after it's received.
+* **How:**
+    * `before_model_callback`: Modify `llm_request` (e.g., add system instructions based on `state`).
+    * `after_model_callback`: Modify the returned `LlmResponse` (e.g., format text, filter content).
+    *  `before_tool_callback`: Modify the tool `args` dictionary.
+    *  `after_tool_callback`: Modify the `tool_response` dictionary.
+* **Example:** `before_model_callback` appends "User language preference: Spanish" to `llm_request.config.system_instruction` if `context.state['lang'] == 'es'`.
 
-### Logging and Monitoring
+### 6. Conditional Skipping of Steps
 
-#### Pattern
+* **Pattern:** Prevent standard operations (agent run, LLM call, tool execution) based on certain conditions.
+* **How:** Return a value from a `before_` callback (`Content` from `before_agent_callback`, `LlmResponse` from `before_model_callback`, `dict` from `before_tool_callback`). The framework interprets this returned value as the result for that step, skipping the normal execution.
+* **Example:** `before_tool_callback` checks `tool_context.state['api_quota_exceeded']`. If `True`, it returns `{'error': 'API quota exceeded'}`, preventing the actual tool function from running.
 
-Implement callbacks at various lifecycle points to log information to an external system or standard output. This provides visibility into the agent's execution flow, decisions, LLM interactions, and tool usage.  
+### 7. Tool-Specific Actions (Authentication & Summarization Control)
 
-#### Example
+* **Pattern:** Handle actions specific to the tool lifecycle, primarily authentication and controlling LLM summarization of tool results.
+* **How:** Use `ToolContext` within tool callbacks (`before_tool_callback`, `after_tool_callback`).
+    * **Authentication:** Call `tool_context.request_credential(auth_config)` in `before_tool_callback` if credentials are required but not found (e.g., via `tool_context.get_auth_response` or state check). This initiates the auth flow.
+    * **Summarization:** Set `tool_context.actions.skip_summarization = True` if the raw dictionary output of the tool should be passed back to the LLM or potentially displayed directly, bypassing the default LLM summarization step.
+* **Example:** A `before_tool_callback` for a secure API checks for an auth token in state; if missing, it calls `request_credential`. An `after_tool_callback` for a tool returning structured JSON might set `skip_summarization = True`.
 
-Log messages like "Executing \- Before Agent Callback: Agent name \- weather\_agent" or "Executing \- After Tool Callback: Tool \- get\_weather, Response: ..." to track the execution flow.
+### 8. Artifact Handling
 
-### Caching
-
-#### Pattern
-
-Use `before_model_callback` or `before_tool_callback` to implement caching. Check if a response for a similar `LlmRequest` or tool call (`args`) exists in the `callback_context.state` or an external cache. If found, return the cached `LlmResponse` or result dictionary, respectively, to skip the actual LLM call or tool execution. If not found, proceed with the call and use the corresponding `after_model_callback` or `after_tool_callback` to store the result for future use.  
-
-#### Example
-
-A `before_tool_callback` for `get_weather` could generate a cache key based on the `city` argument, check `tool_context.state` for this key, and return the cached weather data if present.
-
-### Request/Response Modification
-
-#### Pattern
-
-Use `before_model_callback` to modify the `LlmRequest` before it's sent (e.g., adding context from `state` to the instructions). Use `after_model_callback` to modify the `LlmResponse` (e.g., formatting, censoring). Use `before_tool_callback` to adjust tool `args`. Use `after_tool_callback` to refine the `tool_response`.  
-
-#### Example
-
-A `before_model_callback` could append a "Respond in French" instruction to `llm_request.config.system_instruction` if `callback_context.state['language'] == 'fr'`. An `after_tool_callback` could convert a raw numerical result into a formatted string.
-
-### Conditional Control Flow & Skipping Step
-
-#### Pattern
-
-Leverage the ability of `before_agent_callback`, `before_model_callback`, and `before_tool_callback` to return a value (`Content`, `LlmResponse`, or `dict` respectively). This effectively skips the subsequent standard operation (agent run, LLM call, or tool execution).  
-
-#### Example
-
-A `before_agent_callback` might check `state['user_authenticated']`; if `False`, it returns a `Content` object asking the user to log in, skipping the agent's main logic.
-
-### Tool-Specific Actions (Authentication & Summarization Control)
-
-#### Pattern
-
-Use `ToolContext` within tool callbacks. `before_tool_callback` can call `tool_context.request_credential()` to initiate an authentication flow if needed. Any tool callback can set `tool_context.actions.skip_summarization = True` if the tool's raw output should be sent back to the user/LLM without an intermediate summarization step by the model (as seen in `get_user_choice_tool` and `AgentTool`).  
-
-#### Example
-
-A tool interacting with a protected API might call `request_credential` in its `before_tool_callback` if `get_auth_response()` is empty.
-
-### Artifact Handling
-
-#### Pattern
-
-Use `callback_context.save_artifact` or `tool_context.save_artifact` within any callback to store data (like files generated by a tool or intermediate LLM reasoning steps) associated with the session. Use `load_artifact` to retrieve previously saved artifacts. Changes are tracked in `event.actions.artifact_delta`.  
-
-#### Example
-
-An `after_tool_callback` for a report-generating tool could save the generated report PDF using `save_artifact`.
+* **Pattern:** Save or load session-related files or large data blobs during the agent lifecycle.
+* **How:** Use `callback_context.save_artifact` / `tool_context.save_artifact` to store data (e.g., generated reports, logs, intermediate data). Use `load_artifact` to retrieve previously stored artifacts. Changes are tracked via `Event.actions.artifact_delta`.
+* **Example:** An `after_tool_callback` for a "generate_report" tool saves the output file using `tool_context.save_artifact("report.pdf", report_part)`. A `before_agent_callback` might load a configuration artifact using `callback_context.load_artifact("agent_config.json")`.
 
 ## Best Practices for Callbacks
 
-Follow these guidelines for effective and maintainable callbacks:
+* **Keep Focused:** Design each callback for a single, well-defined purpose (e.g., just logging, just validation). Avoid monolithic callbacks.
+* **Mind Performance:** Callbacks execute synchronously within the agent's processing loop. Avoid long-running or blocking operations (network calls, heavy computation). Offload if necessary, but be aware this adds complexity.
+* **Handle Errors Gracefully:** Use `try...except` blocks within your callback functions. Log errors appropriately and decide if the agent invocation should halt or attempt recovery. Don't let callback errors crash the entire process.
+* **Manage State Carefully:**
+    * Be deliberate about reading from and writing to `context.state`. Changes are immediately visible within the *current* invocation and persisted at the end of the event processing.
+    * Use specific state keys rather than modifying broad structures to avoid unintended side effects.
+    *  Consider using state prefixes (`State.APP_PREFIX`, `State.USER_PREFIX`, `State.TEMP_PREFIX`) for clarity, especially with persistent `SessionService` implementations.
+* **Consider Idempotency:** If a callback performs actions with external side effects (e.g., incrementing an external counter), design it to be idempotent (safe to run multiple times with the same input) if possible, to handle potential retries in the framework or your application.
+* **Test Thoroughly:** Unit test your callback functions using mock context objects. Perform integration tests to ensure callbacks function correctly within the full agent flow.
+* **Ensure Clarity:** Use descriptive names for your callback functions. Add clear docstrings explaining their purpose, when they run, and any side effects (especially state modifications).
+* **Use Correct Context Type:** Always use the specific context type provided (`CallbackContext` for agent/model, `ToolContext` for tools) to ensure access to the appropriate methods and properties.
 
-### Keep Callbacks Focused
-
-Design callbacks for a single, clear task (e.g., logging or validation), avoiding overly complex functions.
-
-### Mind Performance
-
-Callbacks run synchronously. Avoid slow or blocking operations (like heavy I/O) to prevent halting the agent. Offload work if necessary, but be mindful of added complexity.
-
-### Handle Errors
-
-Use `try...except` within callbacks. Gracefully handle exceptions to prevent crashing the agent invocation and log errors gracefully and decide whether the agent should attempt to continue or halt.
-
-### Manage State Carefully
-
-Be deliberate when modifying state via `callback_context.state` or `tool_context.state`. Understand that these changes are immediately visible to subsequent operations within the *same* invocation and will be persisted by the `SessionService` at the end of the event processing. Avoid unintended side effects by carefully managing state keys and values. Use distinct state prefixes like `State.APP_PREFIX`, `State.USER_PREFIX`, `State.TEMP_PREFIX` where appropriate.
-
-### Consider Idempotency
-
-If a callback has external side effects (e.g., API calls), design it to be idempotent to handle potential retries safely.
-
-### Test Thoroughly
-
-Unit test callbacks with mock contexts and integration test the full agent flow with callbacks enabled.
-
-### Ensure Clarity
-
-Use descriptive function names and write clear docstrings explaining the callback's purpose, timing, and side effects (especially state changes).
-
-### Use Correct Context
-
-Employ CallbackContext for agent/LLM events and ToolContext for tool events to access relevant information.
+By applying these patterns and best practices, you can effectively use callbacks to create more robust, observable, and customized agent behaviors in ADK.
