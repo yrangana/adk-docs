@@ -6,6 +6,8 @@ Due to the probabilistic nature of models, deterministic "pass/fail" assertions 
 
 This may seem like a lot of extra work to set up, but the investment of automating evaluations pays off quickly. If you intend to progress beyond prototype, this is a highly recommended best practice.
 
+![intro_components.png](../assets/evaluate_agent.png)
+
 ## Preparing for Agent Evaluations
 
 Before automating agent evaluations, define clear objectives and success criteria:

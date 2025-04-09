@@ -62,6 +62,8 @@ root_agent = Agent(
 
 Notice how easily you integrated [grounding with Google Search](https://ai.google.dev/gemini-api/docs/grounding?lang=python#configure-search) capabilities.  The `Agent` class and the `google_search` tool handle the complex interactions with the LLM and grounding with the search API, allowing you to focus on the agent's *purpose* and *behavior*.
 
+![intro_components.png](../assets/quickstart-streaming-tool.png)
+
 Copy-paste the following code block to `__init__.py` and `main.py` files.
 
 ```py title="__init__.py"
