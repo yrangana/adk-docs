@@ -201,6 +201,13 @@ Expected output for `stream_query` (remote):
 {'parts': [{'text': 'The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).'}], 'role': 'model'}
 ```
 
+## (Optional) Grant the deployed agent permissions
+
+If the deployed agent needs to be granted any additional permissions, you can follow the instructions in [Set up your service agent permissions](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/set-up#service-agent).
+
+Deployed ADK agents need to be granted the following permissions to use managed sessions:
+* Vertex AI User (`roles/aiplatform.user`)
+
 ## Clean up
 
 After you've finished, it's a good practice to clean up your cloud resources.
