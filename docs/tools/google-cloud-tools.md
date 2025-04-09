@@ -264,7 +264,7 @@ Toolbox is an open source server that you deploy and manage yourself. For more i
 ADK relies on the \``toolbox-langchain`\` python package to use Toolbox. Install the package before getting started:
 
 ```shell
-pip install toolbox-langchain
+pip install toolbox-langchain langchain
 ```
 
 ## Loading Toolbox Tools
@@ -272,16 +272,14 @@ pip install toolbox-langchain
 Once you’ve Toolbox server is configured and up and running, you can load tools from your server using the ADK:
 
 ```py
-from google.adk.tools import ToolboxTool
+from google.adk.tools.toolbox_tool import ToolboxTool
 
 toolbox = ToolboxTool("https://127.0.0.1:5000")
 
-# Load all tools
-tools = toolbox.get_toolset(),
 # Load a specific set of tools
 tools = toolbox.get_toolset(toolset_name='my-toolset-name'),
 # Load single tool
-tools = toolbox.get_toolset(tool_name='my-tool-name'),
+tools = toolbox.get_tool(tool_name='my-tool-name'),
 
 root_agent = Agent(  
     ...,
