@@ -1,678 +1,471 @@
-# Multi-Agent
+# Multi-Agent Systems in ADK
 
-As agentic applications grow in complexity, structuring them as a single,
-monolithic agent can become challenging to develop, maintain, and reason about.
-The Agent Development Kit (ADK) embraces a **Multi-Agent System**
-approach, allowing you to build sophisticated applications by composing
-multiple, distinct agent instances that work together.
+As agentic applications grow in complexity, structuring them as a single, monolithic agent can become challenging to develop, maintain, and reason about. The Agent Development Kit (ADK) supports building sophisticated applications by composing multiple, distinct `BaseAgent` instances into a **Multi-Agent System (MAS)**.
 
-<img src="../../assets/multi-agent.png" alt="Multi-agent systems">
+In ADK, a multi-agent system is an application where different agents, often forming a hierarchy, collaborate or coordinate to achieve a larger goal. Structuring your application this way offers significant advantages, including enhanced modularity, specialization, reusability, maintainability, and the ability to define structured control flows using dedicated workflow agents.
 
-## What is a Multi-Agent System in ADK?
+You can compose various types of agents derived from `BaseAgent` to build these systems:
 
-In the context of ADK, a multi-agent system is an application built by
-connecting two or more individual agent instances, derived from `BaseAgent`
-(defined in `google.adk.agents.base_agent.py`). These systems often form a
-hierarchy, where some agents act as containers or coordinators for others.
+* **LLM Agents:** Agents powered by large language models. (See [LLM Agents](llm-agents.md))
+* **Workflow Agents:** Specialized agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`) designed to manage the execution flow of their sub-agents. (See [Workflow Agents](workflow-agents/index.md))
+* **Custom agents:** Your own agents inheriting from `BaseAgent` with specialized, non-LLM logic. (See [Custom Agents](custom-agents.md))
 
-The constituent agents can be diverse:
+The following sections detail the core ADK primitives—such as agent hierarchy, workflow agents, and interaction mechanisms—that enable you to construct and manage these multi-agent systems effectively.
 
-* **`LlmAgent` instances (`google.adk.agents.llm_agent.py`):** Agents powered by large language models, capable of understanding instructions, using tools, and potentially delegating tasks.
-* **Container Agents:** Specialized agents designed to manage the execution flow of their children:
-  * `SequentialAgent` (`google.adk.agents.sequential_agent.py`): Executes children one after another.
-  * `ParallelAgent` (`google.adk.agents.parallel_agent.py`): Executes children concurrently.
-  * `LoopAgent` (`google.adk.agents.loop_agent.py`): Executes children repeatedly based on conditions.
-* **Custom Agents:** Your own agents inheriting from `BaseAgent` with specialized, non-LLM logic.
+## 2. ADK Primitives for Agent Composition
 
-```py
-# Conceptual Example: A Multi-Agent Hierarchy
-from google.adk.agents import LlmAgent, SequentialAgent, BaseAgent
+ADK provides core building blocks—primitives—that enable you to structure and manage interactions within your multi-agent system.
 
-# Define specialized agents (can be LlmAgent or custom BaseAgent)
-class DataFetchingAgent(BaseAgent): ...
-class DataProcessingAgent(BaseAgent): ...
-class ReportingAgent(LlmAgent): ...
-class BookingAgent(LlmAgent): ...
-class UserProfileAgent(LlmAgent): ...
+### 2.1. Agent Hierarchy (`parent_agent`, `sub_agents`)
 
-# Compose them using container agents and hierarchy
-data_pipeline = SequentialAgent(
-    name="DataPipeline",
-    children=[
-        DataFetchingAgent(name="Fetcher"),
-        DataProcessingAgent(name="Processor"),
-        ReportingAgent(name="Reporter", model="gemini-1.5-flash-latest")
-    ]
-)
+The foundation for structuring multi-agent systems is the parent-child relationship defined in `BaseAgent`.
 
-root_agent = LlmAgent(
-    name="MainCoordinator",
-    model="gemini-1.5-flash-latest",
-    instruction="Coordinate tasks related to data and user profiles.",
-    allow_transfer=True, # Enable delegation
-    children=[
-        data_pipeline, # A SequentialAgent as a child
-        BookingAgent(name="Booker"),
-        UserProfileAgent(name="ProfileManager")
-    ]
-)
+* **Establishing Hierarchy:** You create a tree structure by passing a list of agent instances to the `sub_agents` argument when initializing a parent agent. ADK automatically sets the `parent_agent` attribute on each child agent during initialization (`google.adk.agents.base_agent.py` - `model_post_init`).
+* **Single Parent Rule:** An agent instance can only be added as a sub-agent once. Attempting to assign a second parent will result in a `ValueError`.
+* **Importance:** This hierarchy defines the scope for [Workflow Agents](#22-workflow-agents-as-orchestrators) and influences the potential targets for LLM-Driven Delegation. You can navigate the hierarchy using `agent.parent_agent` or find descendants using `agent.find_agent(name)`.
 
-# root_agent now represents the entry point to a multi-agent system.
-# Runner(agent=root_agent, ...)
-```
-
-## Why Build Multi-Agent Systems?
-
-Structuring your application using multiple agents offers significant advantages:
-
-1. **Modularity:** Decompose large, complex problems into smaller, self-contained units. Each agent has a specific focus, making the overall system easier to understand and build incrementally.
-
-   * *Benefit:* Instead of one giant agent handling booking, weather, and user profiles, you have separate `BookingAgent`, `WeatherAgent`, and `ProfileAgent`.
-
-
-
-2. **Specialization:** Design agents optimized for specific tasks or capabilities. An `LlmAgent` can excel at natural language understanding and delegation, while a custom `BaseAgent` might implement complex business logic or data transformations more efficiently.
-
-   * *Benefit:* An `ImageAnalysisAgent` can contain specialized computer vision logic, separate from the conversational `ChatAgent`.
-
-
-
-3. **Reusability:** Well-defined, specialized agents can often be reused across different parts of an application or even in entirely different applications.
-
-   * *Benefit:* A generic `DatabaseQueryAgent` could be used by both a `SalesReportingAgent` and an `InventoryManagementAgent`.
-
-
-
-4. **Maintainability:** Isolating functionality within individual agents makes debugging and updates significantly easier. Changes to one agent are less likely to have unintended side effects on others, provided the communication interfaces (like state keys or tool schemas) are stable.
-
-   * *Benefit:* If the flight booking API changes, you only need to update the `FlightBookingAgent`, not the main coordinating agent.
-
-
-
-5. **Structured Control Flow:** Utilize container agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`) to explicitly define complex workflows, orchestrating how and when different specialized agents are executed.
-
-   * *Benefit:* Implement a checkout process as a `SequentialAgent` ensuring payment happens only after stock verification: `[VerifyStockAgent, ProcessPaymentAgent, ConfirmationAgent]`.
-
-By leveraging these benefits, you can construct more robust, scalable, and manageable agentic applications with ADK compared to monolithic approaches. The framework provides the necessary primitives like agent hierarchy, container agents, and communication mechanisms (covered in later sections) to facilitate building these sophisticated systems.
-
-# Core Concepts for Multi-Agent Architectures
-
-Building effective multi-agent systems in ADK relies on understanding a few core concepts that define structure, communication, and context sharing between agents.
-
-## Agent Hierarchy (`parent_agent`, `children`)
-
-The foundation of structuring multi-agent systems in ADK is the parent-child relationship defined in `BaseAgent` (`google.adk.agents.base_agent.py`).
-
-* **Establishing Relationships:** You create a hierarchy by assigning a list of child agent instances to the `children` attribute of a parent agent. The ADK framework automatically sets the `parent_agent` attribute on each child during the parent agent's initialization (`model_post_init`).
-
-  * An agent can only have **one** parent. Attempting to add an agent instance that already has a parent will raise a `ValueError`.
-
-
-* **Importance:** This hierarchical structure serves several purposes:
-
-  * **Scope for Container Agents:** Container agents like `SequentialAgent`, `ParallelAgent`, and `LoopAgent` operate specifically on the agents listed in their `children`.
-  * **Scope for LLM Transfer:** When an `LlmAgent` has `allow_transfer=True`, the potential agents it can transfer control to are typically determined by this hierarchy (its `parent_agent`, its `children`, and siblings – other children of its parent, unless `disallow_transfer_to_sibling=True`).
-  * **Organizational Structure:** Provides a clear way to visualize and manage the relationships between different components of your application.
-
-
-* **Code Snippet: Defining Hierarchy**
-
-```py
+```python
+# Conceptual Example: Defining Hierarchy
 from google.adk.agents import LlmAgent, BaseAgent
 
 # Define individual agents
-greeting_agent = LlmAgent(name="Greeter", model="gemini-1.5-flash-latest", ...)
-task_agent_1 = BaseAgent(name="Task1", ...)
-task_agent_2 = LlmAgent(name="Task2", model="gemini-1.5-flash-latest", ...)
+greeter = LlmAgent(name="Greeter", model="gemini-2.0-flash-001")
+task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
 
-# Create a parent/coordinator agent
-coordinator_agent = LlmAgent(
+# Create parent agent and assign children via sub_agents
+coordinator = LlmAgent(
     name="Coordinator",
-    model="gemini-1.5-flash-latest",
+    model="gemini-2.0-flash-001",
     description="I coordinate greetings and tasks.",
-    children=[ # Assign children here
-        greeting_agent,
-        task_agent_1,
-        task_agent_2
+    sub_agents=[ # Assign sub_agents here
+        greeter,
+        task_doer
     ]
 )
 
-# Now, the framework automatically sets:
-# greeting_agent.parent_agent == coordinator_agent
-# task_agent_1.parent_agent == coordinator_agent
-# task_agent_2.parent_agent == coordinator_agent
+# Framework automatically sets:
+# assert greeter.parent_agent == coordinator
+# assert task_doer.parent_agent == coordinator
 
-# You can find agents within the hierarchy
-# found_agent = coordinator_agent.find_agent("Task1")
-# assert found_agent == task_agent_1
 ```
 
-## Communication & Coordination Mechanisms
+### 2.2. Workflow Agents as Orchestrators
 
-Agents in a multi-agent system often need to share information or trigger actions in one another. ADK supports several mechanisms:
+ADK includes specialized agents derived from `BaseAgent` that don't perform tasks themselves but orchestrate the execution flow of their `sub_agents`.
 
-1. **Shared State (`session.state`):**
+* **[`SequentialAgent`](workflow-agents/sequential-agents.md):** Executes its `sub_agents` one after another in the order they are listed.
+    * **Context:** Passes the *same* [`InvocationContext`](../runtime/invocation-context.md) sequentially, allowing agents to easily pass results via shared state.
 
-   * **Mechanism:** Agents running within the same `InvocationContext` (and therefore sharing the same `session` object) can communicate passively by reading and writing to the `session.state` dictionary. Callbacks and tools access this via `context.state`.
-   * **How it works:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent (often in a `SequentialAgent` or `LoopAgent`) reads it (`data = context.state.get('data_key')`).
-   * **Convenience:** The `output_key` property on `LlmAgent` automatically saves the agent's final response to a specified state key.
-   * **Nature:** Asynchronous, passive communication. Agents don't directly signal each other; they rely on reading/writing to a shared blackboard.
+    ```python
+    # Conceptual Example: Sequential Pipeline
+    from google.adk.agents import SequentialAgent, LlmAgent
 
+    step1 = LlmAgent(name="Step1_Fetch", output_key="data") # Saves output to state['data']
+    step2 = LlmAgent(name="Step2_Process", instruction="Process data from state key 'data'.")
 
+    pipeline = SequentialAgent(name="MyPipeline", sub_agents=[step1, step2])
+    # When pipeline runs, Step2 can access the state['data'] set by Step1.
+    ```
 
-2. **Direct Invocation (`AgentTool`):**
+* **[`ParallelAgent`](workflow-agents/parallel-agents.md):** Executes its `sub_agents` in parallel. Events from sub-agents may be interleaved.
+    * **Context:** Modifies the `InvocationContext.branch` for each child agent (e.g., `ParentBranch.ChildName`), providing a distinct contextual path which can be useful for isolating history in some memory implementations.
+    * **State:** Despite different branches, all parallel children access the *same shared* `session.state`, enabling them to read initial state and write results (use distinct keys to avoid race conditions).
 
-   * **Mechanism:** An `LlmAgent` can be configured to use another agent instance (any `BaseAgent`) as one of its `tools` by wrapping it with `AgentTool` (defined in `google.adk.tools.agent_tool.py`).
-   * **How it works:** The parent `LlmAgent`'s model generates a function call targeting the `AgentTool`. The `AgentTool` then executes the child agent's `run_async` method within a temporary context, captures its final response, forwards state/artifact deltas, and returns the result to the parent LLM like any other tool.
-   * **Nature:** Synchronous (within the parent's flow), explicit invocation. The parent agent directly calls the child agent as a sub-routine.
+    ```python
+    # Conceptual Example: Parallel Execution
+    from google.adk.agents import ParallelAgent, LlmAgent
 
+    fetch_weather = LlmAgent(name="WeatherFetcher", output_key="weather")
+    fetch_news = LlmAgent(name="NewsFetcher", output_key="news")
 
+    gatherer = ParallelAgent(name="InfoGatherer", sub_agents=[fetch_weather, fetch_news])
+    # When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
+    # A subsequent agent could read state['weather'] and state['news'].
+    ```
 
-3. **LLM-Driven Delegation (`LlmAgent` Transfer):**
+* **[`LoopAgent`](workflow-agents/loop-agents.md):** Executes its `sub_agents` sequentially in a loop.
+    * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent yields an [`Event`](../runtime/events.md) with `actions.escalate=True`.
+    * **Context & State:** Passes the *same* `InvocationContext` in each iteration, allowing state changes (e.g., counters, flags) to persist across loops.
 
-   * **Mechanism:** An `LlmAgent` with `allow_transfer=True` can decide, based on its instructions and the descriptions of nearby agents in the hierarchy, to transfer control to another agent.
-   * **How it works:** The LLM generates a specific function call (e.g., `transfer_to_agent(agent_name='target_agent')`). The `AutoFlow` (`google.adk.flows.llm_flows.auto_flow.py`) intercepts this call and shifts the execution focus to the target agent within the same `InvocationContext`.
-   * **Nature:** Dynamic, LLM-controlled delegation based on natural language understanding and agent descriptions.
+    ```python
+    # Conceptual Example: Loop with Condition
+    from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
+    from google.adk.events import Event, EventActions
+    from google.adk.agents.invocation_context import InvocationContext
+    from typing import AsyncGenerator
 
-The choice of communication mechanism depends on the desired coupling, control flow, and dynamism between agents.
+    class CheckCondition(BaseAgent): # Custom agent to check state
+        async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+            status = ctx.session.state.get("status", "pending")
+            is_done = (status == "completed")
+            yield Event(author=self.name, actions=EventActions(escalate=is_done)) # Escalate if done
 
-## Invocation Context (`InvocationContext`)
+    process_step = LlmAgent(name="ProcessingStep") # Agent that might update state['status']
 
-* **Role:** The `InvocationContext` (defined in `google.adk.agents.invocation_context.py`) acts as the carrier of essential information throughout a single user request-response cycle (an "invocation"), even as control might pass between different agents.
-* **Shared Information:** It holds references to crucial components like the `session` (including `session.state`), the `session_service`, `artifact_service`, `memory_service`, the `invocation_id`, and the initial `user_content`. All agents participating in the same invocation share the same `InvocationContext` instance (though the `agent` attribute within it changes as control transfers). This shared context is what enables communication via shared state.
-* **`branch` Property:**
-  * **Purpose:** Used to create distinct contextual paths, primarily for managing conversational history or context isolation, especially in concurrent scenarios.
-  * **Format:** A dot-separated string representing the path through the agent hierarchy (e.g., `Coordinator.ParallelChild1`, `Coordinator.ParallelChild2`).
-  * **Usage:** Notably, `ParallelAgent` automatically updates the `branch` for each child it runs (`new_branch = f'{parent_context.branch}.{child.name}'` if a branch exists, otherwise just `child.name`). Session/memory services *could* use this branch information to retrieve only relevant history for an agent, preventing concurrent children from seeing each other's intermediate conversation turns within that parallel execution block. `SequentialAgent` and `LoopAgent` typically do not modify the branch, inheriting it from their parent, meaning their children usually share the same conversational context path.
+    poller = LoopAgent(
+        name="StatusPoller",
+        max_iterations=10,
+        sub_agents=[process_step, CheckCondition(name="Checker")]
+    )
+    # When poller runs, it executes process_step then Checker repeatedly
+    # until Checker escalates (state['status'] == 'completed') or 10 iterations pass.
+    ```
 
-Understanding these core concepts is essential before diving into the specific container agents and interaction patterns used to build multi-agent systems.
+### 2.3. Interaction & Communication Mechanisms
 
-# Composition Primitives: Container Agents
+Agents within a system often need to exchange data or trigger actions in one another. ADK facilitates this through:
 
-ADK provides specialized "container" agents, derived from `BaseAgent`, whose primary purpose is not to perform tasks themselves, but to orchestrate the execution of their child agents according to specific control flow patterns. These are essential building blocks for creating structured multi-agent workflows.
+#### a) Shared Session State (`session.state`)
 
-## SequentialAgent
+The most fundamental way for agents operating within the same invocation (and thus sharing the same [`Session`](../sessions/session.md) object via the `InvocationContext`) to communicate passively.
 
-* **Source File:** `google.adk.agents.sequential_agent.py`
-* **Purpose:** To execute a series of child agents one after another, in a predefined order.
-* **Execution Flow:** The `SequentialAgent` iterates through the list of agents provided in its `children` attribute. For each child, it calls the child's `run_async` method and yields all events generated by that child before moving on to the next child in the sequence.
-* **Context & State Handling:**
-  * The *same* `InvocationContext` instance (`ctx`) is passed to each child agent sequentially.
-  * This means that any changes made to `ctx.session.state` by an earlier child agent (or its tools/callbacks) are immediately visible to subsequent child agents in the sequence. This is the primary mechanism for passing results or context between steps in the pipeline.
-  * It does not modify the `InvocationContext.branch`.
-* **Use Cases:**
-  * Implementing multi-step data processing pipelines (e.g., Fetch \-\> Transform \-\> Analyze \-\> Report).
-  * Chaining dependent tasks where the output of one agent is required as input for the next.
-  * Defining fixed, ordered workflows.
-* **Code Example:**
+* **Mechanism:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent reads it (`data = context.state.get('data_key')`). State changes are tracked via [`CallbackContext`](../callbacks/index.md).
+* **Convenience:** The `output_key` property on [`LlmAgent`](llm-agents.md) automatically saves the agent's final response text (or structured output) to the specified state key.
+* **Nature:** Asynchronous, passive communication. Ideal for pipelines orchestrated by `SequentialAgent` or passing data across `LoopAgent` iterations.
+* **See Also:** [State Management](../sessions/state.md)
 
-```py
-from google.adk.agents import SequentialAgent, LlmAgent
-from google.adk.agents.callback_context import CallbackContext
-from google.genai import types
+```python
+# Conceptual Example: Using output_key and reading state
+from google.adk.agents import LlmAgent, SequentialAgent
 
-# Assume Agent_Step1, Agent_Step2, Agent_Step3 are defined LlmAgent instances
-# Agent_Step1 might have output_key='step1_result'
-# Agent_Step2 might read context.state['step1_result'] in its instruction or callbacks
+agent_A = LlmAgent(name="AgentA", instruction="Find the capital of France.", output_key="capital_city")
+agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in state key 'capital_city'.")
 
-pipeline_agent = SequentialAgent(
-    name="ProcessingPipeline",
-    children=[
-        LlmAgent(name="Agent_Step1", model="gemini...", instruction="Fetch data.", output_key="step1_result"),
-        LlmAgent(name="Agent_Step2", model="gemini...", instruction="Process data found in state key 'step1_result'.", output_key="step2_result"),
-        LlmAgent(name="Agent_Step3", model="gemini...", instruction="Summarize result from state key 'step2_result'.")
-    ]
-)
-
-# When pipeline_agent.run_async(ctx) is called:
-# 1. Agent_Step1 runs. Its result might be saved to ctx.session.state['step1_result'].
-# 2. Agent_Step2 runs. It can access ctx.session.state['step1_result']. Its result might be saved to ctx.session.state['step2_result'].
-# 3. Agent_Step3 runs. It can access ctx.session.state['step2_result'].
+pipeline = SequentialAgent(name="CityInfo", sub_agents=[agent_A, agent_B])
+# AgentA runs, saves "Paris" to state['capital_city'].
+# AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
 ```
 
-## ParallelAgent
+#### b) LLM-Driven Delegation (Agent Transfer)
 
-* **Source File:** `google.adk.agents.parallel_agent.py`
-* **Purpose:** To execute multiple child agents concurrently.
-* **Execution Flow:** The `ParallelAgent` uses `asyncio` to start all its child agents' `run_async` methods nearly simultaneously. It then merges the streams of events yielded by each child using the internal `_merge_agent_run` function. This function ensures that events are yielded as soon as any child produces one, effectively interleaving the output from the concurrent runs. The `ParallelAgent` only finishes once *all* child agents have completed their execution.
-* **Context & State Handling:**
-  * Before calling `run_async` on each child, `ParallelAgent` modifies the `InvocationContext`'s `branch` attribute by appending the child's name (e.g., `parent_branch.ChildName`). This provides a distinct contextual path for each concurrent execution, potentially useful for isolating conversational history if the underlying memory/session service supports branch-aware retrieval.
-  * Despite the branched context path, all concurrently running children still receive a reference to the *same, shared* `session` object, including `session.state`. Therefore, they can all read the state as it was when the parallel execution started, and they can all *write* to the same state dictionary.
-  * **Concurrency Note:** While `asyncio` manages concurrency, be cautious if multiple parallel children attempt to modify the *same* state key simultaneously without coordination, as this could lead to race conditions (though the asynchronous nature might often make direct conflicts less likely than in threaded scenarios). Reads are generally safe.
-* **Use Cases:**
-  * Running independent data gathering tasks simultaneously (e.g., fetching weather, news, and stock prices).
-  * Performing parallel processing on different pieces of data.
-  * Executing tasks where the order of completion doesn't matter, and overall latency can be reduced by running them concurrently.
-* **Code Example:**
+Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route tasks to other suitable agents within the hierarchy.
 
-```py
-from google.adk.agents import ParallelAgent, LlmAgent
+* **Mechanism:** The agent's LLM generates a specific function call: `transfer_to_agent(agent_name='target_agent_name')`.
+* **Handling:** The `AutoFlow`, used by default when sub-agents are present or transfer isn't disallowed, intercepts this call. It identifies the target agent using `root_agent.find_agent()` and updates the `InvocationContext` to switch execution focus.
+* **Requires:** The calling `LlmAgent` needs clear `instructions` on when to transfer, and potential target agents need distinct `description`s for the LLM to make informed decisions. Transfer scope (parent, sub-agent, siblings) can be configured on the `LlmAgent`.
+* **Nature:** Dynamic, flexible routing based on LLM interpretation.
 
-# Assume WeatherAgent, NewsAgent, TrafficAgent are defined LlmAgent instances
-# They might use output_key to save their results to different state keys.
-
-information_gatherer = ParallelAgent(
-    name="InfoGatherer",
-    children=[
-        LlmAgent(name="WeatherAgent", model="gemini...", instruction="Get weather for London.", output_key="weather_result"),
-        LlmAgent(name="NewsAgent", model="gemini...", instruction="Get top headline.", output_key="news_result"),
-        LlmAgent(name="TrafficAgent", model="gemini...", instruction="Get traffic status.", output_key="traffic_result")
-    ]
-)
-
-# When information_gatherer.run_async(ctx) is called:
-# 1. WeatherAgent, NewsAgent, TrafficAgent start concurrently.
-# 2. Each receives a context with a modified branch (e.g., ctx.branch + ".WeatherAgent").
-# 3. Events from the agents may be interleaved in the output stream.
-# 4. All agents read/write to the *same* ctx.session.state.
-# 5. After all three finish, the state might contain 'weather_result', 'news_result', 'traffic_result'.
-```
-
-## LoopAgent
-
-* **Source File:** `google.adk.agents.loop_agent.py`
-* **Purpose:** To execute a sequence of child agents repeatedly until a specific condition is met.
-* **Execution Flow:** The `LoopAgent` runs its list of `children` sequentially, similar to `SequentialAgent`. After completing one full pass through all children, it checks its termination conditions. If conditions are not met, it starts another iteration, running the children sequentially again.
-* **Termination Conditions:** The loop stops if either of the following occurs:
-  1. `max_iterations` (Optional `int`): If set, the loop stops after completing the specified number of full iterations.
-  2. `actions.escalate = True`: If any event yielded by *any* child agent during an iteration contains `actions.escalate = True` (defined in `google.adk.events.event_actions.py`), the `LoopAgent` immediately stops processing the current iteration and terminates after yielding that escalating event.
-* **Context & State Handling:**
-  * The *same* `InvocationContext` (`ctx`) is passed to the children in each iteration.
-  * This means state changes made in one iteration (e.g., updating a counter in `ctx.session.state`) are persistent and visible in the next iteration.
-  * It does not modify the `InvocationContext.branch`.
-* **Live Mode:** Note that `_run_live_impl` is explicitly not implemented for `LoopAgent` in the provided code, raising a `NotImplementedError`.
-* **Use Cases:**
-  * Implementing retry logic for a sequence of tasks.
-  * Polling for a status change until a desired state is reached (where a child agent checks the status and sets `escalate=True` when done).
-  * Iterative refinement processes where agents progressively improve a result stored in the state over multiple cycles.
-  * Building simple state machines where a child agent determines the next state and decides whether to continue (`escalate=False`) or exit the loop (`escalate=True`).
-* **Code Example:**
-
-```py
-from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
-from google.adk.events.event_actions import EventActions
-from google.adk.agents.invocation_context import InvocationContext
-from google.adk.events import Event
-from google.genai import types
-from typing import AsyncGenerator
-from typing_extensions import override
-
-class CheckConditionAgent(BaseAgent):
-    @override
-    async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-        counter = ctx.session.state.get('loop_counter', 0)
-        should_stop = counter >= 2 # Stop condition
-        yield Event(
-            author=self.name,
-            content=types.Content(parts=[types.Part(text=f"Checking condition: Counter={counter}. Stop={should_stop}")]) ,
-            actions=EventActions(escalate=should_stop) # Escalate if counter >= 2
-        )
-
-class IncrementCounterAgent(BaseAgent):
-     @override
-     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-        counter = ctx.session.state.get('loop_counter', 0) + 1
-        ctx.session.state['loop_counter'] = counter # Update state
-        yield Event(
-            author=self.name,
-            content=types.Content(parts=[types.Part(text=f"Incremented counter to {counter}")])
-            # State delta is implicitly handled by context mutation
-        )
-
-# Loop up to 5 times, but CheckConditionAgent will escalate earlier
-iterative_agent = LoopAgent(
-    name="IterativeProcessor",
-    max_iterations=5,
-    children=[
-        IncrementCounterAgent(name="Incr"),
-        CheckConditionAgent(name="Check")
-    ]
-)
-
-# When iterative_agent.run_async(ctx) is called (assuming state starts empty):
-# Iteration 1: Incr (counter=1), Check (counter=1, escalate=False)
-# Iteration 2: Incr (counter=2), Check (counter=2, escalate=False) -> Note: Error in condition logic above, should be >= 2
-# Iteration 3: Incr (counter=3), Check (counter=3, escalate=True) -> Loop terminates here.
-# Corrected condition logic:
-# Iteration 1: Incr (counter=1), Check (counter=1, escalate=False)
-# Iteration 2: Incr (counter=2), Check (counter=2, escalate=True) -> Loop terminates here.
-```
-
-These container agents provide powerful ways to structure the flow of execution between multiple specialized agents within your ADK application.
-
-# Interaction Mechanisms in Detail
-
-Once you have multiple agents defined, you need mechanisms for them to communicate, coordinate, or delegate tasks. ADK provides several ways for agents to interact, primarily revolving around LLM capabilities, explicit tool usage, and shared session state.
-
-## LLM-Driven Delegation (Agent Transfer)
-
-This mechanism leverages the language understanding capabilities of an LLM to dynamically route tasks between agents based on their descriptions and the conversational context.
-
-* **Applies To:** Primarily `LlmAgent` instances where the `allow_transfer` attribute is set to `True` (which is the default).
-* **Mechanism:**
-  1. The currently active `LlmAgent` receives input (user message or tool results).
-  2. Its underlying flow (typically `AutoFlow`, defined in `google.adk.flows.llm_flows.auto_flow.py`) constructs a prompt for the LLM. This prompt includes the agent's instructions, conversation history, and crucially, the *descriptions* of other "nearby" agents it can potentially transfer to.
-  3. **Agent Discovery:** Nearby agents typically include the agent's `parent_agent`, its `children`, and its siblings (other children of the parent), unless `disallow_transfer_to_sibling=True` is set on the parent.
-  4. **LLM Decision:** The LLM analyzes the user's request and the descriptions of the available agents. If it determines another agent is better suited to handle the request, it generates a specific function call, typically `transfer_to_agent(agent_name='target_agent_name')`.
-  5. **Framework Handling:** The `AutoFlow` (or similar logic) detects this specific function call. Instead of executing it like a normal tool, it modifies the `InvocationContext` by setting the `agent` attribute to the target agent instance (found using `root_agent.find_agent(target_agent_name)`) and continues the execution loop, effectively transferring control. The same `InvocationContext` (with updated `agent`) is used, preserving the session state and invocation ID.
-* **Characteristics:** Dynamic, flexible, relies on LLM interpretation, suitable for natural language routing. Control transfer is managed by the framework based on the LLM's output.
-* **Requirement:** Clear, concise, and *distinct* `description` fields for all participating agents are **essential** for the LLM to make accurate routing decisions. The agent's `instruction` should also guide it on *when* to consider transferring.
-* **Code Example (Conceptual):**
-
-```py
+```python
+# Conceptual Setup: LLM Transfer
 from google.adk.agents import LlmAgent
 
-booking_agent = LlmAgent(
-    name="FlightBooker",
-    model="gemini...",
-    description="Specializes in booking flights.",
-    # ... other config ...
-)
-
-weather_agent = LlmAgent(
-    name="WeatherReporter",
-    model="gemini...",
-    description="Provides weather forecasts.",
-    # ... other config ...
-)
+booking_agent = LlmAgent(name="Booker", description="Handles flight and hotel bookings.")
+info_agent = LlmAgent(name="Info", description="Provides general information and answers questions.")
 
 coordinator = LlmAgent(
     name="Coordinator",
-    model="gemini...",
-    instruction="You are a helpful assistant. Delegate flight booking to FlightBooker and weather requests to WeatherReporter.",
-    description="Main coordinator agent.",
-    allow_transfer=True, # Enable transfer
-    children=[booking_agent, weather_agent]
+    instruction="You are an assistant. Delegate booking tasks to Booker and info requests to Info.",
+    description="Main coordinator.",
+    # AutoFlow is typically used implicitly here
+    sub_agents=[booking_agent, info_agent]
 )
-
-# --- Hypothetical Run ---
-# User Query: "Book a flight to Paris and tell me the weather there."
-
-# 1. Coordinator receives the query.
-# 2. LLM (for Coordinator) analyzes query and agent descriptions.
-# 3. LLM might decide to handle weather first, outputting:
-#    FunctionCall(name='transfer_to_agent', args={'agent_name': 'WeatherReporter'})
-# 4. Framework transfers control to WeatherReporter.
-# 5. WeatherReporter runs, gets weather for Paris, responds. Control returns to Coordinator.
-# 6. Coordinator's LLM gets the weather response, sees the remaining task.
-# 7. LLM outputs:
-#    FunctionCall(name='transfer_to_agent', args={'agent_name': 'FlightBooker'})
-# 8. Framework transfers control to FlightBooker.
-# 9. FlightBooker runs to handle the booking.
-# ... (flow continues)
+# If coordinator receives "Book a flight", its LLM should generate:
+# FunctionCall(name='transfer_to_agent', args={'agent_name': 'Booker'})
+# ADK framework then routes execution to booking_agent.
 ```
 
-## Direct Invocation (`AgentTool`)
+#### c) Explicit Invocation (`AgentTool`)
 
-This mechanism allows an `LlmAgent` to treat another agent as a callable function or tool, providing a more explicit and controlled way to invoke sub-tasks.
+Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a callable function or [Tool](../tools/index.md).
 
-* **Applies To:** An `LlmAgent` (parent) invoking any other `BaseAgent` instance (child/target).
-* **Mechanism:**
-  1. You wrap the target agent instance within `AgentTool` (defined in `google.adk.tools.agent_tool.py`).
-  2. You include this `AgentTool` instance in the `tools` list of the parent `LlmAgent`.
-  3. `AgentTool` automatically generates a function declaration for the target agent (using its `name`, `description`, and optionally its `input_schema`).
-  4. **LLM Decision:** The parent `LlmAgent`'s LLM, seeing the `AgentTool` in its list of available tools, can decide to generate a function call targeting it, providing arguments based on the target agent's declaration (often just a 'request' string, or structured input if `input_schema` is used).
-  5. **`AgentTool` Execution:** When the framework executes this function call, the `AgentTool.run_async` method is invoked. It:
-     * Creates a temporary, isolated run context for the target agent (using `InMemorySessionService` and `InMemoryMemoryService` by default).
-     * Copies the current state from the parent's `ToolContext` into the child's temporary session.
-     * Runs the target agent using `runner.run_async` with the input derived from the LLM's arguments.
-     * Extracts the final response (text or structured if `output_schema` is used) from the target agent's run.
-     * Forwards any state deltas and saved artifacts from the child's run back to the parent's `ToolContext`, ensuring changes are reflected in the main session.
-     * Returns the final response as the result of the tool call.
-* **Characteristics:** Explicit, controlled invocation; behaves like a standard tool call from the parent LLM's perspective; encapsulates the child agent's execution; automatically handles state/artifact forwarding.
-* **Requirement:** The target agent must be wrapped in `AgentTool` and included in the parent's `tools` list.
-* **Code Example (Conceptual):**
+* **Mechanism:** Wrap the target agent instance in `AgentTool` and include it in the parent `LlmAgent`'s `tools` list. `AgentTool` generates a corresponding function declaration for the LLM.
+* **Handling:** When the parent LLM generates a function call targeting the `AgentTool`, the framework executes `AgentTool.run_async`. This method runs the target agent, captures its final response, forwards any state/artifact changes back to the parent's context, and returns the response as the tool's result.
+* **Nature:** Synchronous (within the parent's flow), explicit, controlled invocation like any other tool.
+* **(Note:** `AgentTool` needs to be imported and used explicitly).
 
-```py
+```python
+# Conceptual Setup: Agent as a Tool
 from google.adk.agents import LlmAgent, BaseAgent
-from google.adk.tools import AgentTool
+from google.adk.tools import AgentTool # Assuming AgentTool exists
 from pydantic import BaseModel
 
-# Define a target agent (could be LlmAgent or BaseAgent)
-class SummarizerAgent(LlmAgent):
-    name: str = "TextSummarizer"
-    model: str = "gemini..."
-    instruction: str = "Summarize the input text."
-    # Optional: Define input/output for structured interaction
-    # class SummarizerInput(BaseModel): text_to_summarize: str
-    # class SummarizerOutput(BaseModel): summary: str
-    # input_schema = SummarizerInput
-    # output_schema = SummarizerOutput
+# Define a target agent (could be LlmAgent or custom BaseAgent)
+class ImageGeneratorAgent(BaseAgent): # Example custom agent
+    name: str = "ImageGen"
+    description: str = "Generates an image based on a prompt."
+    # ... internal logic ...
+    async def _run_async_impl(self, ctx): # Simplified run logic
+        prompt = ctx.session.state.get("image_prompt", "default prompt")
+        # ... generate image bytes ...
+        image_bytes = b"..."
+        yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(image_bytes, "image/png")]))
 
-summarizer = SummarizerAgent()
-
-# Create the AgentTool
-summarizer_tool = AgentTool(agent=summarizer)
+image_agent = ImageGeneratorAgent()
+image_tool = AgentTool(agent=image_agent) # Wrap the agent
 
 # Parent agent uses the AgentTool
-orchestrator = LlmAgent(
-    name="Orchestrator",
-    model="gemini...",
-    instruction="Fetch text and summarize it using the TextSummarizer tool.",
-    tools=[summarizer_tool] # Add the AgentTool here
+artist_agent = LlmAgent(
+    name="Artist",
+    model="gemini-1.5-flash",
+    instruction="Create a prompt and use the ImageGen tool to generate the image.",
+    tools=[image_tool] # Include the AgentTool
 )
-
-# --- Hypothetical Run ---
-# User Query: "Summarize the latest news article."
-
-# 1. Orchestrator fetches the article text (e.g., using another tool, not shown).
-# 2. Orchestrator's LLM decides to summarize, outputting:
-#    FunctionCall(name='TextSummarizer', args={'request': 'Long article text...'})
-#    # Or if schema used: {'text_to_summarize': 'Long article text...'}
-# 3. Framework calls summarizer_tool.run_async(...).
-# 4. AgentTool runs the SummarizerAgent internally with the input text.
-# 5. SummarizerAgent generates the summary.
-# 6. AgentTool captures the summary, forwards state/artifacts (if any), returns summary.
-# 7. Orchestrator's LLM receives the summary as the tool result.
-# 8. Orchestrator presents the summary to the user.
+# Artist LLM generates a prompt, then calls:
+# FunctionCall(name='ImageGen', args={'image_prompt': 'a cat wearing a hat'})
+# Framework calls image_tool.run_async(...), which runs ImageGeneratorAgent.
+# The resulting image Part is returned to the Artist agent as the tool result.
 ```
 
-## Shared State (`session.state` & `output_key`)
+These primitives provide the flexibility to design multi-agent interactions ranging from tightly coupled sequential workflows to dynamic, LLM-driven delegation networks.
 
-This is the most fundamental, passive way for agents to share information when they operate within the same session, particularly useful in sequential or looping workflows.
+## 3. Common Multi-Agent Patterns using ADK Primitives
 
-* **Applies To:** Any agents (`BaseAgent`, `LlmAgent`, container agents managing children) running within the same `InvocationContext`. Especially relevant for children of `SequentialAgent` and `LoopAgent`.
-* **Mechanism:**
-  1. **Writing:** An agent, tool, or callback modifies the state dictionary accessible via `context.state['my_key'] = my_value`. This mutation is tracked by the `State` object and recorded in the event's `actions.state_delta`.
-  2. **Reading:** Another agent, tool, or callback running later *within the same invocation* (or subsequent iterations of a loop) accesses the same state dictionary via `context.state.get('my_key')` or `context.state['my_key']`.
-  3. **`output_key` Convenience:** `LlmAgent` has an `output_key` property. If set to a string (e.g., `"agent_result"`), the agent's final text response (or structured output if `output_schema` is defined and used) is automatically saved to `session.state["agent_result"]` after the agent finishes its run (`__maybe_save_output_to_state` in `llm_agent.py`).
-* **Characteristics:** Asynchronous (agents don't wait for each other to read/write state beyond the workflow's control flow); passive (agents poll the state rather than being directly signaled); requires careful management of state keys to avoid collisions or stale data.
-* **Requirement:** Agents must be running within the same invocation (sharing the same `session` instance via the `InvocationContext`).
-* **Code Example (Conceptual \- Sequential):**
+By combining ADK's composition primitives, you can implement various established patterns for multi-agent collaboration.
 
-```py
-from google.adk.agents import SequentialAgent, LlmAgent
+### Coordinator/Dispatcher Pattern
 
-agent_fetch = LlmAgent(
-    name="Fetcher",
-    model="gemini...",
-    instruction="Fetch the user ID and store it.",
-    output_key="user_id_from_fetcher" # Save final response to this state key
-)
+* **Structure:** A central [`LlmAgent`](llm-agents.md) (Coordinator) manages several specialized `sub_agents`.
+* **Goal:** Route incoming requests to the appropriate specialist agent.
+* **ADK Primitives Used:**
+    * **Hierarchy:** Coordinator has specialists listed in `sub_agents`.
+    * **Interaction:** Primarily uses **LLM-Driven Delegation** (requires clear `description`s on sub-agents and appropriate `instruction` on Coordinator) or **Explicit Invocation (`AgentTool`)** (Coordinator includes `AgentTool`-wrapped specialists in its `tools`).
 
-agent_process = LlmAgent(
-    name="Processor",
-    model="gemini...",
-    # Instruction accesses state written by the previous agent
-    instruction="Retrieve the user ID from state key 'user_id_from_fetcher' and process it."
-)
-
-pipeline = SequentialAgent(
-    name="UserProcessingPipeline",
-    children=[agent_fetch, agent_process]
-)
-
-# --- Hypothetical Run ---
-# User Query: "Process my data."
-
-# 1. pipeline starts.
-# 2. agent_fetch runs, determines user ID is 'user123', responds 'user123'.
-# 3. Framework saves 'user123' into ctx.session.state['user_id_from_fetcher'] because output_key is set.
-# 4. agent_process runs. Its LLM prompt includes its instruction.
-# 5. When processing the instruction, the agent reads ctx.session.state['user_id_from_fetcher'] ('user123').
-# 6. agent_process uses 'user123' to perform its task.
-```
-
-These three mechanisms provide a range of options, from dynamic LLM-based routing to explicit tool-like invocation and simple state sharing, allowing you to build multi-agent systems with varying degrees of coupling and control.
-
-# Common Multi-Agent Patterns
-
-By combining the container agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`) and interaction mechanisms (LLM Transfer, `AgentTool`, Shared State), you can implement various established patterns for multi-agent collaboration within the ADK. Here are some common designs:
-
-1. ## Coordinator/Dispatcher Pattern:
-
-
-
-   * **Structure:** A central `LlmAgent` (the Coordinator) sits at a higher level in the hierarchy, with several specialized child agents (e.g., `BookingAgent`, `InfoAgent`, `CalculationAgent`).
-   * **Mechanism:** The Coordinator typically has `allow_transfer=True` and/or uses `AgentTool` wrappers for its children. It receives the primary user request. Based on its instructions and the user's intent, its LLM either:
-     * Uses `transfer_to_agent` to delegate the entire task to the appropriate child specialist.
-     * Calls a child agent as a tool via `AgentTool` to get specific information or perform a sub-task, potentially combining results from multiple tools before responding.
-   * **Communication:** Primarily via LLM Transfer or `AgentTool` invocation/results. Shared state might be used for passing broader context if needed.
-   * **Use Case:** Handling diverse user requests by routing them to the correct specialized agent. Acts as a central conversational entry point.
-   * **Conceptual Code:**
-
-```py
+```python
+# Conceptual Code: Coordinator using LLM Transfer
 from google.adk.agents import LlmAgent
-from google.adk.tools import AgentTool
 
-# Define specialist agents
-flight_agent = LlmAgent(name="FlightSpecialist", description="Handles flight bookings.", ...)
-hotel_agent = LlmAgent(name="HotelSpecialist", description="Handles hotel reservations.", ...)
+billing_agent = LlmAgent(name="Billing", description="Handles billing inquiries.")
+support_agent = LlmAgent(name="Support", description="Handles technical support requests.")
 
-# Coordinator uses AgentTools or LLM Transfer
-travel_coordinator = LlmAgent(
-    name="TravelCoordinator",
-    model="gemini...",
-    instruction="Coordinate travel plans. Use FlightSpecialist for flights and HotelSpecialist for hotels.",
-    # Option 1: Use AgentTools
-    tools=[AgentTool(agent=flight_agent), AgentTool(agent=hotel_agent)],
-    # Option 2: Use LLM Transfer (ensure allow_transfer=True, descriptions are good)
-    # children=[flight_agent, hotel_agent],
-    # allow_transfer=True,
-    ...
+coordinator = LlmAgent(
+    name="HelpDeskCoordinator",
+    model="gemini-1.5-flash",
+    instruction="Route user requests: Use Billing agent for payment issues, Support agent for technical problems.",
+    description="Main help desk router.",
+    # allow_transfer=True is often implicit with sub_agents in AutoFlow
+    sub_agents=[billing_agent, support_agent]
 )
+# User asks "My payment failed" -> Coordinator's LLM should call transfer_to_agent(agent_name='Billing')
+# User asks "I can't log in" -> Coordinator's LLM should call transfer_to_agent(agent_name='Support')
 ```
 
-2. ## Sequential Pipeline Pattern:
+### Sequential Pipeline Pattern
 
+* **Structure:** A [`SequentialAgent`](workflow-agents/sequential-agents.md) contains `sub_agents` executed in a fixed order.
+* **Goal:** Implement a multi-step process where the output of one step feeds into the next.
+* **ADK Primitives Used:**
+    * **Workflow:** `SequentialAgent` defines the order.
+    * **Communication:** Primarily uses **Shared Session State**. Earlier agents write results (often via `output_key`), later agents read those results from `context.state`.
 
-
-   * **Structure:** A `SequentialAgent` contains a list of child agents that execute in a fixed order.
-   * **Mechanism:** Each agent performs one step of a larger process.
-   * **Communication:** Primarily relies on shared `session.state`. An earlier agent performs its task and saves the result to a specific state key (often using `output_key`). The next agent in the sequence reads that state key to get its input.
-   * **Use Case:** Implementing well-defined, multi-step workflows where the output of one step is the direct input for the next (e.g., data validation \-\> processing \-\> storage \-\> notification).
-   * **Conceptual Code:**
-
-```py
+```python
+# Conceptual Code: Sequential Data Pipeline
 from google.adk.agents import SequentialAgent, LlmAgent
 
-validate_agent = LlmAgent(name="Validator", instruction="Validate input data.", output_key="validated_data", ...)
-process_agent = LlmAgent(name="Processor", instruction="Process data from state key 'validated_data'.", output_key="processed_result", ...)
-notify_agent = LlmAgent(name="Notifier", instruction="Notify user about result in state key 'processed_result'.", ...)
+validator = LlmAgent(name="ValidateInput", instruction="Validate the input.", output_key="validation_status")
+processor = LlmAgent(name="ProcessData", instruction="Process data if state key 'validation_status' is 'valid'.", output_key="result")
+reporter = LlmAgent(name="ReportResult", instruction="Report the result from state key 'result'.")
 
 data_pipeline = SequentialAgent(
-    name="DataProcessingPipeline",
-    children=[validate_agent, process_agent, notify_agent]
+    name="DataPipeline",
+    sub_agents=[validator, processor, reporter]
 )
+# validator runs -> saves to state['validation_status']
+# processor runs -> reads state['validation_status'], saves to state['result']
+# reporter runs -> reads state['result']
 ```
 
-3. ## Parallel Fan-Out/Gather Pattern:
+### Parallel Fan-Out/Gather Pattern
 
+* **Structure:** A [`ParallelAgent`](workflow-agents/parallel-agents.md) runs multiple `sub_agents` concurrently, often followed by a later agent (in a `SequentialAgent`) that aggregates results.
+* **Goal:** Execute independent tasks simultaneously to reduce latency, then combine their outputs.
+* **ADK Primitives Used:**
+    *   **Workflow:** `ParallelAgent` for concurrent execution (Fan-Out). Often nested within a `SequentialAgent` to handle the subsequent aggregation step (Gather).
+    *   **Communication:** Sub-agents write results to distinct keys in **Shared Session State**. The subsequent "Gather" agent reads multiple state keys.
 
-
-   * **Structure:** Often involves a `ParallelAgent` executing multiple child agents concurrently. This `ParallelAgent` might itself be a child within a larger `SequentialAgent`.
-   * **Mechanism:**
-     * **Fan-Out:** The `ParallelAgent` starts several child agents simultaneously to perform independent tasks (e.g., querying different APIs, performing calculations on different data subsets).
-     * **Gather:** Children typically write their individual results to distinct keys in the shared `session.state`. A subsequent agent (often the next step in an outer `SequentialAgent`) reads these multiple state keys to aggregate, synthesize, or compare the results before presenting a final response.
-   * **Communication:** Children write to shared state independently. A later agent reads multiple state keys.
-   * **Use Case:** Speeding up tasks that can be done independently. Gathering information from multiple sources before making a decision or presenting a summary.
-   * **Conceptual Code:**
-
-```py
+```python
+# Conceptual Code: Parallel Information Gathering
 from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
 
-weather_agent = LlmAgent(name="Weather", instruction="Get weather.", output_key="weather_info", ...)
-news_agent = LlmAgent(name="News", instruction="Get news.", output_key="news_info", ...)
-stock_agent = LlmAgent(name="Stocks", instruction="Get stock price.", output_key="stock_info", ...)
+fetch_api1 = LlmAgent(name="API1Fetcher", instruction="Fetch data from API 1.", output_key="api1_data")
+fetch_api2 = LlmAgent(name="API2Fetcher", instruction="Fetch data from API 2.", output_key="api2_data")
 
-parallel_gatherer = ParallelAgent(
-    name="GatherInfo",
-    children=[weather_agent, news_agent, stock_agent]
+gather_concurrently = ParallelAgent(
+    name="ConcurrentFetch",
+    sub_agents=[fetch_api1, fetch_api2]
 )
 
-summary_agent = LlmAgent(
-    name="Summarizer",
-    instruction="Summarize the weather, news, and stock info found in state keys 'weather_info', 'news_info', 'stock_info'.",
-    ...
+synthesizer = LlmAgent(
+    name="Synthesizer",
+    instruction="Combine results from state keys 'api1_data' and 'api2_data'."
 )
 
-# Wrap in a SequentialAgent to ensure summarization happens *after* gathering
 overall_workflow = SequentialAgent(
-    name="DailyBriefing",
-    children=[parallel_gatherer, summary_agent]
+    name="FetchAndSynthesize",
+    sub_agents=[gather_concurrently, synthesizer] # Run parallel fetch, then synthesize
 )
+# fetch_api1 and fetch_api2 run concurrently, saving to state.
+# synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
 ```
 
-4. ## Hierarchical Task Decomposition:
+### Hierarchical Task Decomposition
 
+* **Structure:** A multi-level tree of agents where higher-level agents break down complex goals and delegate sub-tasks to lower-level agents.
+* **Goal:** Solve complex problems by recursively breaking them down into simpler, executable steps.
+* **ADK Primitives Used:**
+    *   **Hierarchy:** Multi-level `parent_agent`/`sub_agents` structure.
+    *   **Interaction:** Primarily **LLM-Driven Delegation** or **Explicit Invocation (`AgentTool`)** used by parent agents to assign tasks to children. Results are returned up the hierarchy (via tool responses or state).
 
-
-   * **Structure:** A multi-level tree of agents. A high-level agent receives a complex goal.
-   * **Mechanism:** The high-level agent (often an `LlmAgent`) breaks the goal into smaller sub-tasks. It then delegates these sub-tasks to its child agents using either LLM Transfer or `AgentTool`. These child agents might, in turn, decompose their assigned sub-task further and delegate to their own children, continuing down the hierarchy until tasks become simple enough for a specialist agent to execute directly (e.g., making a single API call or performing a calculation). Results are typically passed back up the hierarchy.
-   * **Communication:** Primarily LLM Transfer or `AgentTool` calls down the hierarchy; results are returned back up via tool responses or potentially state updates.
-   * **Use Case:** Solving complex problems that require breaking them down into manageable steps, mirroring human problem-solving approaches. Planning and execution agents often follow this pattern.
-   * **Conceptual Code:**
-
-```py
+```python
+# Conceptual Code: Hierarchical Research Task
 from google.adk.agents import LlmAgent
-from google.adk.tools import AgentTool
+from google.adk.tools import AgentTool # Assuming AgentTool exists
 
-# Low-level tool agents
-search_api_agent = LlmAgent(name="SearchAPI", description="Performs web search.", ...)
-calculator_agent = LlmAgent(name="Calculator", description="Performs calculations.", ...)
+# Low-level tool-like agents
+web_searcher = LlmAgent(name="WebSearch", description="Performs web searches for facts.")
+summarizer = LlmAgent(name="Summarizer", description="Summarizes text.")
 
-# Mid-level research agent
-research_agent = LlmAgent(
-    name="Researcher",
-    description="Researches a topic using search and calculation.",
-    tools=[AgentTool(agent=search_api_agent), AgentTool(agent=calculator_agent)],
-    ...
+# Mid-level agent combining tools
+research_assistant = LlmAgent(
+    name="ResearchAssistant",
+    model="gemini-1.5-flash",
+    description="Finds and summarizes information on a topic.",
+    tools=[AgentTool(agent=web_searcher), AgentTool(agent=summarizer)]
 )
 
-# High-level planner agent
-planner_agent = LlmAgent(
-    name="Planner",
-    model="gemini...",
-    instruction="Plan how to answer the user's complex question. Delegate research tasks to the Researcher agent.",
-    tools=[AgentTool(agent=research_agent)],
-    # Or use LLM Transfer: children=[research_agent], allow_transfer=True
-    ...
+# High-level agent delegating research
+report_writer = LlmAgent(
+    name="ReportWriter",
+    model="gemini-1.5-flash",
+    instruction="Write a report on topic X. Use the ResearchAssistant to gather information.",
+    tools=[AgentTool(agent=research_assistant)]
+    # Alternatively, could use LLM Transfer if research_assistant is a sub_agent
 )
-# User interacts with planner_agent
+# User interacts with ReportWriter.
+# ReportWriter calls ResearchAssistant tool.
+# ResearchAssistant calls WebSearch and Summarizer tools.
+# Results flow back up.
+```
+
+### Review/Critique Pattern (Generator-Critic)
+
+* **Structure:** Typically involves two agents within a [`SequentialAgent`](workflow-agents/sequential-agents.md): a Generator and a Critic/Reviewer.
+* **Goal:** Improve the quality or validity of generated output by having a dedicated agent review it.
+* **ADK Primitives Used:**
+    *   **Workflow:** `SequentialAgent` ensures generation happens before review.
+    *   **Communication:** **Shared Session State** (Generator uses `output_key` to save output; Reviewer reads that state key). The Reviewer might save its feedback to another state key for subsequent steps.
+
+```python
+# Conceptual Code: Generator-Critic
+from google.adk.agents import SequentialAgent, LlmAgent
+
+generator = LlmAgent(
+    name="DraftWriter",
+    instruction="Write a short paragraph about subject X.",
+    output_key="draft_text"
+)
+
+reviewer = LlmAgent(
+    name="FactChecker",
+    instruction="Review the text in state key 'draft_text' for factual accuracy. Output 'valid' or 'invalid' with reasons.",
+    output_key="review_status"
+)
+
+# Optional: Further steps based on review_status
+
+review_pipeline = SequentialAgent(
+    name="WriteAndReview",
+    sub_agents=[generator, reviewer]
+)
+# generator runs -> saves draft to state['draft_text']
+# reviewer runs -> reads state['draft_text'], saves status to state['review_status']
+```
+
+### Iterative Refinement Pattern
+
+* **Structure:** Uses a [`LoopAgent`](workflow-agents/loop-agents.md) containing one or more agents that work on a task over multiple iterations.
+* **Goal:** Progressively improve a result (e.g., code, text, plan) stored in the session state until a quality threshold is met or a maximum number of iterations is reached.
+* **ADK Primitives Used:**
+    * **Workflow:** `LoopAgent` manages the repetition.
+    * **Communication:** **Shared Session State** is essential for agents to read the previous iteration's output and save the refined version.
+    * **Termination:** The loop typically ends based on `max_iterations` or a dedicated checking agent setting `actions.escalate=True` when the result is satisfactory.
+
+```python
+# Conceptual Code: Iterative Code Refinement
+from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
+from google.adk.events import Event, EventActions
+from google.adk.agents.invocation_context import InvocationContext
+from typing import AsyncGenerator
+
+# Agent to generate/refine code based on state['current_code'] and state['requirements']
+code_refiner = LlmAgent(
+    name="CodeRefiner",
+    instruction="Read state['current_code'] (if exists) and state['requirements']. Generate/refine Python code to meet requirements. Save to state['current_code'].",
+    output_key="current_code" # Overwrites previous code in state
+)
+
+# Agent to check if the code meets quality standards
+quality_checker = LlmAgent(
+    name="QualityChecker",
+    instruction="Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.",
+    output_key="quality_status"
+)
+
+# Custom agent to check the status and escalate if 'pass'
+class CheckStatusAndEscalate(BaseAgent):
+    async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+        status = ctx.session.state.get("quality_status", "fail")
+        should_stop = (status == "pass")
+        yield Event(author=self.name, actions=EventActions(escalate=should_stop))
+
+refinement_loop = LoopAgent(
+    name="CodeRefinementLoop",
+    max_iterations=5,
+    sub_agents=[code_refiner, quality_checker, CheckStatusAndEscalate(name="StopChecker")]
+)
+# Loop runs: Refiner -> Checker -> StopChecker
+# State['current_code'] is updated each iteration.
+# Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
+```
+
+### Human-in-the-Loop Pattern
+
+*   **Structure:** Integrates human intervention points within an agent workflow.
+*   **Goal:** Allow for human oversight, approval, correction, or tasks that AI cannot perform.
+*   **ADK Primitives Used (Conceptual):**
+    *   **Interaction:** Can be implemented using a custom **Tool** that pauses execution and sends a request to an external system (e.g., a UI, ticketing system) waiting for human input. The tool then returns the human's response to the agent.
+    *   **Workflow:** Could use **LLM-Driven Delegation** (`transfer_to_agent`) targeting a conceptual "Human Agent" that triggers the external workflow, or use the custom tool within an `LlmAgent`.
+    *   **State/Callbacks:** State can hold task details for the human; callbacks can manage the interaction flow.
+    *   **Note:** ADK doesn't have a built-in "Human Agent" type, so this requires custom integration.
+
+```python
+# Conceptual Code: Using a Tool for Human Approval
+from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.tools import FunctionTool
+
+# --- Assume external_approval_tool exists ---
+# This tool would:
+# 1. Take details (e.g., request_id, amount, reason).
+# 2. Send these details to a human review system (e.g., via API).
+# 3. Poll or wait for the human response (approved/rejected).
+# 4. Return the human's decision.
+# async def external_approval_tool(amount: float, reason: str) -> str: ...
+approval_tool = FunctionTool(func=external_approval_tool)
+
+# Agent that prepares the request
+prepare_request = LlmAgent(
+    name="PrepareApproval",
+    instruction="Prepare the approval request details based on user input. Store amount and reason in state.",
+    # ... likely sets state['approval_amount'] and state['approval_reason'] ...
+)
+
+# Agent that calls the human approval tool
+request_approval = LlmAgent(
+    name="RequestHumanApproval",
+    instruction="Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].",
+    tools=[approval_tool],
+    output_key="human_decision"
+)
+
+# Agent that proceeds based on human decision
+process_decision = LlmAgent(
+    name="ProcessDecision",
+    instruction="Check state key 'human_decision'. If 'approved', proceed. If 'rejected', inform user."
+)
+
+approval_workflow = SequentialAgent(
+    name="HumanApprovalWorkflow",
+    sub_agents=[prepare_request, request_approval, process_decision]
+)
 ```
 
 These patterns provide starting points for structuring your multi-agent systems. You can mix and match them as needed to create the most effective architecture for your specific application.
-
-# Best Practices for Multi-Agent Design
-
-Building robust and maintainable multi-agent systems requires thoughtful design. Consider these best practices when architecting your application using ADK:
-
-1. **Adhere to the Single Responsibility Principle:** Design each agent (`LlmAgent`, `BaseAgent`) to have a single, well-defined purpose or capability. Avoid creating monolithic agents that try to do too many unrelated things. This improves modularity, reusability, and testability.
-2. **Write Clear and Distinct Descriptions (for LLM Transfer):** If using LLM-driven delegation (`allow_transfer=True`), the `description` field of each potential target agent is critical. Make descriptions:
-   * **Concise:** Get straight to the agent's core capability.
-   * **Accurate:** Reflect what the agent actually does.
-   * **Distinct:** Clearly differentiate the agent's function from its siblings and parent to help the LLM make the correct routing choice. Poor or ambiguous descriptions are a common source of transfer errors.
-3. **Prefer Explicit Communication Where Appropriate:** While LLM transfer offers dynamic routing, it relies on the LLM's interpretation. For critical or well-defined sub-tasks, consider using the more explicit `AgentTool` mechanism. This treats the sub-agent like a predictable function call, reducing reliance on LLM interpretation for core workflow steps. Use shared state (`session.state`) for passing data passively, especially in sequential pipelines.
-4. **Manage Shared State Carefully:**
-   * **Avoid Pollution:** Be mindful that `session.state` is shared among agents within an invocation (and across iterations in `LoopAgent`). Avoid using overly generic state keys that might collide between unrelated agents.
-   * **Use Clear Key Names:** Adopt a consistent naming convention for state keys (e.g., `agentName_outputValue`, `temp_calculationResult`).
-   * **Lifecycle Management:** If state data is only needed temporarily between two sequential agents, consider if it needs to be explicitly cleared afterwards to prevent clutter, although this is often not strictly necessary. The `output_key` feature provides a standardized way to pass results.
-   * **Concurrency:** Be cautious when multiple children of a `ParallelAgent` write to the same state key without coordination. If atomicity or specific ordering is required for updates, parallel execution might not be the best fit for that specific state modification.
-5. **Plan the Agent Hierarchy:** Think about the logical relationships between your agents. Who coordinates whom? Which agents represent sub-tasks? This hierarchy influences LLM transfer scope and helps organize your project. Limit the scope of LLM transfer using `allow_transfer=False` or `disallow_transfer_to_sibling=True` on agents where dynamic delegation is undesirable or unnecessary.
-6. **Start Simple, Iterate:** Multi-agent systems can become complex quickly. Begin with a simpler structure and gradually add more agents or complex interactions as needed. Test interactions thoroughly at each stage.
-7. **Consider Error Handling:** How should the system behave if a child agent fails?
-   * **`SequentialAgent`:** The sequence typically stops if a child raises an unhandled exception.
-   * **`ParallelAgent`:** The failure of one child doesn't necessarily stop others, but the overall `ParallelAgent` run might be considered failed or incomplete.
-   * **`LoopAgent`:** Failure might stop the current iteration or the entire loop.
-   * Consider using callbacks (e.g., `after_agent_callback` on children or containers) or `try...except` blocks within custom agent logic to handle failures gracefully, potentially logging errors, updating state, or attempting recovery.
-8. **Test Agent Interactions:** Don't just test individual agents in isolation. Create test cases that specifically verify the interactions between agents, whether through container agents, LLM transfer, `AgentTool`, or shared state, to ensure the overall system behaves as expected.

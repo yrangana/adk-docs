@@ -1,4 +1,4 @@
-# What is `InvocationContext`? 
+# What is `InvocationContext`?
 
 Think of the `InvocationContext` as the **"briefcase" or "backpack"** that an agent carries with it during a single job or task run. In ADK, this "job" starts when a user sends a message and ends when the agent provides its final response for that specific interaction. This entire cycle is called an **invocation**.
 
@@ -30,12 +30,12 @@ Think of the `InvocationContext` as the **"briefcase" or "backpack"** that an ag
 
 Essentially, it's the container holding everything relevant for the current task run, passed implicitly where needed.
 
-# What's Inside? (The Essentials)
+## What's Inside? (The Essentials)
 
 The `InvocationContext` (often referred to as `ctx` in agent code) contains several useful attributes. Here are the most important ones you'll likely interact with:
 
 1. **`session` (`Session`)**: **This is the most crucial part\!** It's your direct link to the current conversation session (`google.adk.sessions.session.py`). Through `ctx.session`, you access:  
-     
+
    * **`session.state` (`dict[str, Any]`):** The shared dictionary holding data that persists across different steps or agent turns *within this invocation* (and potentially across invocations if using a persistent `SessionService`). This is the primary way agents share information passively.  
    * **`session.events` (`list[Event]`):** The history of all events that have occurred in this session so far. Useful for context or debugging.  
    * Other session details like `session.id`, `session.user_id`, `session.app_name`.
@@ -102,11 +102,11 @@ else:
 
 While there are other fields, these are the core components you'll leverage most often when building agents that need context, shared data, or access to framework services. The `session` attribute, in particular, is fundamental for communication and state management between agent steps.
 
-# How Do You Use It?
+## How Do You Use It?
 
 You'll interact with the information held in `InvocationContext` in two main ways:
 
-## 1\. Directly in Agent Implementation:
+### 1\. Directly in Agent Implementation
 
 When you define the core logic of your custom agent by overriding the `_run_async_impl` (or `_run_live_impl`) method, the framework automatically passes the `InvocationContext` object as the `ctx` argument.
 
@@ -150,7 +150,7 @@ class MyCustomAgent(BaseAgent):
         )
 ```
 
-## 2\. Indirectly via Callback & Tool Contexts:
+### 2\. Indirectly via Callback & Tool Contexts
 
 When you write callback functions (like `before_agent_callback`, `after_model_callback`, `before_tool_callback`, etc.) or the functions backing your tools, you don't receive the `InvocationContext` directly. Instead, you receive a specialized context object:
 
@@ -215,7 +215,7 @@ def my_tool_function(query: str, tool_context: ToolContext) -> Dict[str, Any]:
 
 So, while `InvocationContext` is the central carrier, your direct interaction point is often the `ctx` in agents or the `callback_context`/`tool_context` in callbacks and tools, which provide managed access to the underlying invocation's data and services.
 
-# Other Fields
+## Other Fields
 
 The `InvocationContext` contains a few other fields tailored for more specific or advanced scenarios. You generally won't need these when starting out, but it's good to know they exist:
 
@@ -228,4 +228,4 @@ The `InvocationContext` contains a few other fields tailored for more specific o
 * **`transcription_cache` (`Optional[list[TranscriptionEntry]]`):** Internal cache used for audio transcription in live mode.  
 * **`end_invocation` (`bool`):** A flag that can be set (usually by callbacks or tools) to signal that the entire invocation should terminate prematurely, stopping further processing.
 
-**Don't worry about these advanced fields initially.** Focus on using `ctx.session.state`, `ctx.agent`, `ctx.invocation_id`, and leveraging the methods on `CallbackContext`/`ToolContext` for state and artifact management. You can explore the other fields if you delve into real-time streaming or complex parallel execution patterns later.  
+**Don't worry about these advanced fields initially.** Focus on using `ctx.session.state`, `ctx.agent`, `ctx.invocation_id`, and leveraging the methods on `CallbackContext`/`ToolContext` for state and artifact management. You can explore the other fields if you delve into real-time streaming or complex parallel execution patterns later.

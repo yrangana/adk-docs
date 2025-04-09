@@ -1,192 +1,141 @@
-# Ecosystem Tools
+# Third Party Tools
 
-ADK is designed to be highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
+ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
 
-## Using LangChain Tools
+## 1. Using LangChain Tools
 
 ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
 
-### How to Use
+### Example: Web Search using LangChain's Tavily tool
 
-1. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, for the Tavily search tool:
+[Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
+
+1. Follow [ADK installation and setup](../get-started/installation.md) guide.
+
+2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
 
     ```bash
     pip install langchain_community tavily-python
     ```
 
-2. **Import:** Import the `LangchainTool` wrapper from the ADK and the specific `LangChain` tool you wish to use.
+3. Obtain a [Tavily](https://tavily.com/) API KEY and export it as an environment variable.
+
+    ```bash
+    export TAVILY_API_KEY=<REPLACE_WITH_API_KEY>
+    ```
+
+4. **Import:** Import the `LangchainTool` wrapper from ADK and the specific `LangChain` tool you wish to use (e.g, `TavilySearchResults`).
 
     ```py
     from google.adk.tools.langchain_tool import LangchainTool
     from langchain_community.tools import TavilySearchResults
     ```
 
-3. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the LangchainTool constructor.
+5. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the `LangchainTool` constructor.
 
     ```py
+    # Instantiate the LangChain tool
     tavily_tool_instance = TavilySearchResults(
         max_results=5,
-        # ... other LangChain tool parameters
+        search_depth="advanced",
+        include_answer=True,
+        include_raw_content=True,
+        include_images=True,
     )
-    adk_wrapped_tool = LangchainTool(tool=tavily_tool_instance)
+
+    # Wrap it with LangchainTool for ADK
+    adk_tavily_tool = LangchainTool(tool=tavily_tool_instance)
     ```
 
-4. **Add to Agent:** Include the wrapped LangchainTool instance in your agent's tools list during definition.
+6. **Add to Agent:** Include the wrapped `LangchainTool` instance in your agent's `tools` list during definition.
 
     ```py
-    from google.adk.agents import Agent
+    from google.adk import Agent
 
+    # Define the ADK agent, including the wrapped tool
     my_agent = Agent(
-        # ... other agent parameters
-        tools=[adk_wrapped_tool]
+        name="langchain_tool_agent",
+        model="gemini-2.0-flash",
+        description="Agent to answer questions using TavilySearch.",
+        instruction="I can answer your questions by searching the internet. Just ask me anything!",
+        tools=[adk_tavily_tool] # Add the wrapped tool here
     )
     ```
 
-### Example: Tavily Search
+### Full Example: Tavily Search
 
-Note: Create a [Tavily](https://tavily.com/) API KEY and set it as an environment variable before running this sample.
+Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
 
 ```py
-from agents import Agent, Runner
-from agents.sessions import InMemorySessionService
-from agents.tools.langchain_tool import LangchainTool
-from langchain_community.tools import TavilySearchResults
-from google.genai import types
-
-APP_NAME = "news_app"
-USER_ID = "1234"
-
-root_agent = Agent(
-    name="langchain_tool_agent",
-    model="gemini-2.0-flash-001",
-    description="Agent to answer questions using TavilySearch.",
-    instruction="I can answer your questions by searching the internet. Just ask me anything!",
-    # Add the LangChain Tavily tool
-    tools = [LangchainTool(
-        tool= TavilySearchResults(
-            max_results=5,
-            search_depth="advanced",
-            include_answer=True,
-            include_raw_content=True,
-            include_images=True,
-        )
-    )]
-)
-
-session_service = InMemorySessionService()
-
-runner = Runner(
-    agent=root_agent,
-    session_service=session_service,
-    app_name=APP_NAME,
-)
-
-session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID)
-
-# Query
-query = "what's the latest news in Toronto"
-content = types.Content(role="user", parts=[types.Part(text=query)])
-events = runner.run(session=session, new_message=content)
-for event in events:
-    if event.is_final_response():
-        final_response = event.content.parts[0].text
-        print("Agent Response: ", final_response)
+--8<-- "examples/python/snippets/tools/third-party/langchain-tavily-search.py"
 ```
 
-## Using CrewAI tools
+## 2. Using CrewAI tools
 
 ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library.
 
-### How to Use
+### Example: Web Search using CrewAI's Serper API
 
-1. **Install Dependencies:** Install the necessary CrewAI tools package.
+[Serper API](https://serper.dev/) provides access to Google Search results programmatically. It allows applications, like AI agents, to perform real-time Google searches (including news, images, etc.) and get structured data back without needing to scrape web pages directly.
+
+1. Follow [ADK installation and setup](../get-started/installation.md) guide.
+
+2. **Install Dependencies:** Install the necessary CrewAI tools package. For example, to use the SerperDevTool:
 
     ```bash
     pip install crewai-tools
-    Use code with caution.
     ```
 
-2. **Import:** Import `CrewaiTool` from ADK and the desired CrewAI tool.
+3. Obtain a [Serper API KEY](https://serper.dev/) and export it as an environment variable.
+
+    ```bash
+    export SERPER_API_KEY=<REPLACE_WITH_API_KEY>
+    ```
+
+4. **Import:** Import `CrewaiTool` from ADK and the desired CrewAI tool (e.g, `SerperDevTool`).
 
     ```py
     from google.adk.tools.crewai_tool import CrewaiTool
     from crewai_tools import SerperDevTool
     ```
 
-3. **Instantiate & Wrap:** Create an instance of the CrewAI tool. Pass it to the `CrewaiTool` constructor. You must also provide a name and description to the ADK wrapper, as these might differ from the CrewAI tool's internal naming.
+5. **Instantiate & Wrap:** Create an instance of the CrewAI tool. Pass it to the `CrewaiTool` constructor. **Crucially, you must provide a name and description** to the ADK wrapper, as these are used by ADK's underlying model to understand when to use the tool.
 
     ```py
+    # Instantiate the CrewAI tool
     serper_tool_instance = SerperDevTool(
         n_results=10,
+        save_file=False,
         search_type="news",
-        # ... other CrewAI tool parameters
     )
-    adk_wrapped_tool = CrewaiTool(
-        name="InternetNewsSearch", # Define a clear name for ADK
-        description="Searches the internet for recent news articles.", # Define a description for ADK
+
+    # Wrap it with CrewaiTool for ADK, providing name and description
+    adk_serper_tool = CrewaiTool(
+        name="InternetNewsSearch",
+        description="Searches the internet specifically for recent news articles using Serper.",
         tool=serper_tool_instance
     )
     ```
 
-4. **Add to Agent:** Include the wrapped `CrewaiTool` instance in your agent's tools list.
+6. **Add to Agent:** Include the wrapped `CrewaiTool` instance in your agent's `tools` list.
 
     ```py
-    from google.adk.agents import Agent
-
+    from google.adk import Agent
+ 
+    # Define the ADK agent
     my_agent = Agent(
-        # ... other agent parameters
-        tools=[adk_wrapped_tool]
+        name="crewai_search_agent",
+        model="gemini-2.0-flash",
+        description="Agent to find recent news using the Serper search tool.",
+        instruction="I can find the latest news for you. What topic are you interested in?",
+        tools=[adk_serper_tool] # Add the wrapped tool here
     )
     ```
 
-### Example: Serper Search for News
+### Full Example: Serper API
 
-Here’s an example of a `CrewaiTool` using Serper API to fetch the latest news.
+Here's the full code combining the steps above to create and run an agent using the CrewAI Serper API search tool.
 
 ```py
-from google.adk import Agent, Runner
-from google.adk.sessions import InMemorySessionService
-from google.adk.tools.crewai_tool import CrewaiTool
-from crewai_tools import SerperDevTool
-from google.genai import types
-
-# Constants
-APP_NAME="news_app"
-USER_ID="user1234"
-SESSION_ID="1234"
-
-root_agent = Agent(
-    name="basic_search_agent",
-    model="gemini-2.0-flash-001",
-    description="Agent to answer questions using Google Search.",
-    instruction="I can answer your questions by searching the internet. Just ask me anything!",
-    # Add the Serper tool
-    tools = [CrewaiTool(
-        name="Serper Tool",
-        description="A tool to search the internet for news.",
-        tool = SerperDevTool(
-            n_results=10,
-            save_file=False,
-            search_type="news",
-        )
-    )]
-)
-
-# Session and Runner
-session_service = InMemorySessionService()
-session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
-runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
-
-
-# Agent Interaction
-def call_agent(query):
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-  events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
- 
-  for event in events:
-      if event.is_final_response():
-          final_response = event.content.parts[0].text
-          print("Agent Response: ", final_response)
-
-call_agent("what's the latest ai?")
+--8<-- "examples/python/snippets/tools/third-party/crewai-serper-search.py"
 ```

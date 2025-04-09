@@ -9,27 +9,27 @@ ADK offers four primary ways to interact with your agents:
 | Interaction Method | What it is                                                                                                                                               | When to Use |
 | :---- |:---------------------------------------------------------------------------------------------------------------------------------------------------------| :---- |
 | Command-Line Interface (CLI) | Use terminal commands to interact directly with your agent.                                                                                              | Quick tasks, scripting, automation, developers comfortable with terminal commands. |
-| Web UI | Interact with your agent through a user-friendly web browser.                                                                                            | Visual interaction, monitoring agent behavior, users less familiar with the command line. |
+| ADK dev UI | Interact with your agent through a user-friendly web browser.                                                                                            | Visual interaction, monitoring agent behavior, users less familiar with the command line. |
 | API Server | Run your agent as a REST API, allowing other applications to communicate with it.                                                                        | Integration with other applications, building services that use the agent, remote access to the agent. |
-| Programmatic Interface | Integrate Agent Development Kit (ADK) directly into your applications (Python, Java, etc.) or notebooks (Jupyter, Colab). This provides full control over agent execution. | Deep integration within applications, custom workflows, notebooks, fine-grained control over agent execution. |
+| Programmatic Interface | Integrate ADK directly into your applications (Python, Java, etc.) or notebooks (Jupyter, Colab). This provides full control over agent execution. | Deep integration within applications, custom workflows, notebooks, fine-grained control over agent execution. |
 
 **Note:**  The way you *define* your agent (the core logic within `agent.py`) is the *same* regardless of how you choose to interact with it. The difference lies in how you *initiate* and *manage* the interaction.
 
-### Project Structure (for CLI, Web UI and API Server)
+### Project Structure (for CLI, dev UI and API Server)
 
-To build an agent for use with the CLI, Web UI  or API commands, you need to organize your code within a specific folder structure
+To build an agent for use with the CLI, dev UI  or API commands, you need to organize your code within a specific folder structure
 
-**Note:**  This folder structure is required when using the adk command-line tools (adk cli, adk web, adk api_server). If you are using Agent Development Kit (ADK) directly within a Jupyter Notebook or integrating it into an existing Python project, you do not need to follow this structure. You can create and interact with Agent objects directly in your code.
+**Note:**  This folder structure is required when using the adk command-line tools (adk cli, adk web, adk api_server). If you are using ADK directly within a Jupyter Notebook or integrating it into an existing Python project, you do not need to follow this structure. You can create and interact with Agent objects directly in your code.
 
 * **Create a Directory:** Create a directory for your agent, named after the agent (e.g., `my_search_agent`).
 
 * **Required Files:**  Within this folder, you *must* include the following files:
 
-  * `agent.py`: Inside the agent directory, create a file named `agent.py`. This file will contain your agent's definition (using the `Agent` class).  You *must* define a variable named `root_agent` within this file; this serves as the entry point for the Agent Development Kit (ADK).
+  * `agent.py`: Inside the agent directory, create a file named `agent.py`. This file will contain your agent's definition (using the `Agent` class).  You *must* define a variable named `root_agent` within this file; this serves as the entry point for the ADK.
   * `__init__.py`:  This is a standard Python module file. At a minimum, it must contain the line `from . import agent` to import the necessary class.  It's also where you can import and make available other modules within your agent's folder.
 
 
-  *Why is this necessary?*  This file makes your agent directory a Python package.  The Agent Development Kit (ADK) CLI relies on Python's module discovery mechanisms.  By including this line, you make your agent's class accessible when the CLI imports your agent's package.
+  *Why is this necessary?*  This file makes your agent directory a Python package.  The ADK CLI relies on Python's module discovery mechanisms.  By including this line, you make your agent's class accessible when the CLI imports your agent's package.
 
 
 * **Optional Files:** You are encouraged to add these files for better organization and documentation:
@@ -58,7 +58,7 @@ adk run my_search_agent  # Replace with your agent's folder name
 
    This will start the agent, and you can interact with it directly in the terminal.
 
-### 2\) Web UI (`adk web`)
+### 2) Dev UI (`adk web`)
 
 1. **Navigate:**  Open your terminal and `cd` to the directory containing your agent folder. Note you should be in the parent directory of the agent folder, not in the agent folder itself.
 2. **Run:** Execute:
@@ -111,11 +111,11 @@ curl -X DELETE "http://127.0.0.1:8000/apps/{app_123}/users/{user_123}/sessions/{
 
 ### 4\) Programmatic Interface (Apps and Notebooks)
 
-The Programmatic Interface allows you to integrate Agent Development Kit (ADK) directly into your Python applications or interactive notebooks (like Jupyter and Colab). Unlike the CLI, Web UI, and API server, you *don't* need the specific project structure as described above. Instead you’ll be using a Session and Runner. You can define and interact with your agent within the same file or notebook cell.
+The Programmatic Interface allows you to integrate ADK directly into your Python applications or interactive notebooks (like Jupyter and Colab). Unlike the CLI, dev UI, and API server, you *don't* need the specific project structure as described above. Instead you’ll be using a Session and Runner. You can define and interact with your agent within the same file or notebook cell.
 
 Here's a breakdown of the steps and a complete code example:
 
-1. **Define Your Agent:**  Create an `Agent` object, just like you would for the CLI or Web UI.  You can do this directly in your application code or notebook cell.
+1. **Define Your Agent:**  Create an `Agent` object, just like you would for the CLI or dev UI.  You can do this directly in your application code or notebook cell.
 
 2. **Create a Session :** Think of **Sessions** as the "memory" of your agent. They allow your agent to remember the ongoing conversation. Just like in a real conversation, the agent needs to track what's been said before. `InMemorySessionService` manages this history of interactions, so your agent has context.
 
@@ -125,7 +125,7 @@ from agents.sessions import InMemorySessionService
 
 # Step 1: Define your agent:
 root_agent = Agent(name="my_agent",
-                   model="gemini-2.0-flash-001",
+                   model="gemini-2.0-flash",
  		      instruction="Answer questions.")
 
 # Step 2: Initiate Session
@@ -140,7 +140,7 @@ Note: Data stored in-memory is fast to access but **disappears when your session
 3. **Create a Runner:**
 
 
-The **Runner** is the **core component** in the Agent Development Kit (ADK) responsible for **executing an agent** in response to a user query. It **orchestrates the agent's processing flow** by managing an **event loop** and interacting with other components in the agent. The Runner also utilizes various **services** for session management, and memory. It **processes generated events** and returns a **stream of events**. The Runner provides different execution methods such as `run`, `run_async`, and `run_live`.
+The **Runner** is the **core component** in the ADK responsible for **executing an agent** in response to a user query. It **orchestrates the agent's processing flow** by managing an **event loop** and interacting with other components in the agent. The Runner also utilizes various **services** for session management, and memory. It **processes generated events** and returns a **stream of events**. The Runner provides different execution methods such as `run`, `run_async`, and `run_live`.
 
 ```py
 from agents.runners import Runner
@@ -212,7 +212,7 @@ for event in events:
 
 * **Full Tutorial:** For a complete, step-by-step guide to using the Programmatic Interface, including code examples and advanced techniques, see the quickstart on building a Weather Agent. **\[placeholder-link\]**
 
-You should now have a solid understanding of how to install Agent Development Kit, configure your LLM, and run your agents using different interaction methods.
+You should now have a solid understanding of how to install ADK, configure your LLM, and run your agents using different interaction methods.
 
 ## Next steps
 

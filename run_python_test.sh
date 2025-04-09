@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-PYTHON_VERSIONS=("3.10" "3.11" "3.12")
+PYTHON_VERSIONS=("3.9", "3.10" "3.11" "3.12")
 PYTHON_DIR="samples/python"
 
 # Check for Gemini configuration. Should be removed for other LLMs.

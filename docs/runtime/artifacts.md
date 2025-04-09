@@ -1,38 +1,37 @@
 # Artifacts
 
-In the Agent Development Kit (ADK), **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
+In the ADK, **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
 
 ## What are Artifacts?
 
 * **Definition:** An Artifact is essentially a piece of binary data (like the content of a file) identified by a unique `filename` string within a specific scope (session or user). Each time you save an artifact with the same filename, a new version is created.  
-    
+
 * **Representation:** Artifacts are consistently represented using the standard `google.genai.types.Part` object. The core data is typically stored within the `inline_data` attribute of the `Part`, which itself contains:  
-    
-  * `data`: The raw binary content as `bytes`.  
-  * `mime_type`: A string indicating the type of the data (e.g., `'image/png'`, `'application/pdf'`). This is essential for correctly interpreting the data later.
+    * `data`: The raw binary content as `bytes`.  
+    * `mime_type`: A string indicating the type of the data (e.g., `'image/png'`, `'application/pdf'`). This is essential for correctly interpreting the data later.
 
-```py
-# Example of how an artifact might be represented as a types.Part
-import google.genai.types as types
+    ```py
+    # Example of how an artifact might be represented as a types.Part
+    import google.genai.types as types
 
-# Assume 'image_bytes' contains the binary data of a PNG image
-image_bytes = b'\x89PNG\r\n\x1a\n...' # Placeholder for actual image bytes
+    # Assume 'image_bytes' contains the binary data of a PNG image
+    image_bytes = b'\x89PNG\r\n\x1a\n...' # Placeholder for actual image bytes
 
-image_artifact = types.Part(
-    inline_data=types.Blob(
-        mime_type="image/png",
-        data=image_bytes
+    image_artifact = types.Part(
+        inline_data=types.Blob(
+            mime_type="image/png",
+            data=image_bytes
+        )
     )
-)
 
-# You can also use the convenience constructor:
-# image_artifact_alt = types.Part.from_data(data=image_bytes, mime_type="image/png")
+    # You can also use the convenience constructor:
+    # image_artifact_alt = types.Part.from_data(data=image_bytes, mime_type="image/png")
 
-print(f"Artifact MIME Type: {image_artifact.inline_data.mime_type}")
-print(f"Artifact Data (first 10 bytes): {image_artifact.inline_data.data[:10]}...")
-```
+    print(f"Artifact MIME Type: {image_artifact.inline_data.mime_type}")
+    print(f"Artifact Data (first 10 bytes): {image_artifact.inline_data.data[:10]}...")
+    ```
 
-* **Persistence & Management:** Artifacts are not stored directly within the agent or session state. Their storage and retrieval are managed by a dedicated **Artifact Service** (an implementation of `BaseArtifactService`, defined in `google.adk.artifacts.base_artifact_service.py`). The ADK provides implementations like `InMemoryArtifactService` (for testing/temporary storage, defined in `google.adk.artifacts.in_memory_artifact_service.py`) and `GcsArtifactService` (for persistent storage using Google Cloud Storage, defined in `google.adk.artifacts.gcs_artifact_service.py`). The chosen service handles versioning automatically when you save data.
+* **Persistence & Management:** Artifacts are not stored directly within the agent or session state. Their storage and retrieval are managed by a dedicated **Artifact Service** (an implementation of `BaseArtifactService`, defined in `google.adk.artifacts.base_artifact_service.py`). ADK provides implementations like `InMemoryArtifactService` (for testing/temporary storage, defined in `google.adk.artifacts.in_memory_artifact_service.py`) and `GcsArtifactService` (for persistent storage using Google Cloud Storage, defined in `google.adk.artifacts.gcs_artifact_service.py`). The chosen service handles versioning automatically when you save data.
 
 ## Why Use Artifacts?
 
@@ -44,24 +43,59 @@ While session `state` is suitable for storing small pieces of configuration or c
 4. **Sharing Outputs:** Enable tools or agents to generate binary outputs (like a PDF report or a generated image) that can be saved via `save_artifact` and later accessed by other parts of the application or even in subsequent sessions (if using user namespacing).  
 5. **Caching Binary Data:** Store the results of computationally expensive operations that produce binary data (e.g., rendering a complex chart image) as artifacts to avoid regenerating them on subsequent requests.
 
-In essence, whenever your agent needs to work with file-like binary data that needs to be persisted, versioned, or shared, Artifacts managed by an `ArtifactService` are the appropriate mechanism within the ADK.
+In essence, whenever your agent needs to work with file-like binary data that needs to be persisted, versioned, or shared, Artifacts managed by an `ArtifactService` are the appropriate mechanism within ADK.
 
-# Core Concepts
+## Common Use Cases
+
+Artifacts provide a flexible way to handle binary data within your ADK applications.
+
+Here are some typical scenarios where they prove valuable:
+
+* **Generated Reports/Files:**
+    * A tool or agent generates a report (e.g., a PDF analysis, a CSV data export, an image chart).  
+    * The tool uses `tool_context.save_artifact("monthly_report_oct_2024.pdf", report_part)` to store the generated file.  
+    * The user can later ask the agent to retrieve this report, which might involve another tool using `tool_context.load_artifact("monthly_report_oct_2024.pdf")` or listing available reports using `tool_context.list_artifacts()`.
+
+* **Handling User Uploads:**  
+
+    * A user uploads a file (e.g., an image for analysis, a document for summarization) through a front-end interface.  
+    * The application backend receives the file, creates a `types.Part` from its bytes and MIME type, and uses the `runner.session_service` (or similar mechanism outside a direct agent run) or a dedicated tool/callback within a run via `context.save_artifact` to store it, potentially using the `user:` namespace if it should persist across sessions (e.g., `user:uploaded_image.jpg`).  
+    * An agent can then be prompted to process this uploaded file, using `context.load_artifact("user:uploaded_image.jpg")` to retrieve it.
+
+* **Storing Intermediate Binary Results:**  
+
+    * An agent performs a complex multi-step process where one step generates intermediate binary data (e.g., audio synthesis, simulation results).  
+    * This data is saved using `context.save_artifact` with a temporary or descriptive name (e.g., `"temp_audio_step1.wav"`).  
+    * A subsequent agent or tool in the flow (perhaps in a `SequentialAgent` or triggered later) can load this intermediate artifact using `context.load_artifact` to continue the process.
+
+* **Persistent User Data:**  
+
+    * Storing user-specific configuration or data that isn't a simple key-value state.  
+    * An agent saves user preferences or a profile picture using `context.save_artifact("user:profile_settings.json", settings_part)` or `context.save_artifact("user:avatar.png", avatar_part)`.  
+    * These artifacts can be loaded in any future session for that user to personalize their experience.
+
+* **Caching Generated Binary Content:**  
+
+    * An agent frequently generates the same binary output based on certain inputs (e.g., a company logo image, a standard audio greeting).  
+    * Before generating, a `before_tool_callback` or `before_agent_callback` checks if the artifact exists using `context.load_artifact`.  
+    * If it exists, the cached artifact is used, skipping the generation step.  
+    * If not, the content is generated, and `context.save_artifact` is called in an `after_tool_callback` or `after_agent_callback` to cache it for next time.
+
+## Core Concepts
 
 Understanding artifacts involves grasping a few key components: the service that manages them, the data structure used to hold them, and how they are identified and versioned.
 
-## Artifact Service (`BaseArtifactService`)
+### Artifact Service (`BaseArtifactService`)
 
 * **Role:** The central component responsible for the actual storage and retrieval logic for artifacts. It defines *how* and *where* artifacts are persisted.  
-    
-* **Interface:** Defined by the abstract base class `BaseArtifactService` (`google.adk.artifacts.base_artifact_service.py`). Any concrete implementation must provide methods for:  
-    
-  * `save_artifact(...) -> int`: Stores the artifact data and returns its assigned version number.  
-  * `load_artifact(...) -> Optional[types.Part]`: Retrieves a specific version (or the latest) of an artifact.  
-  * `list_artifact_keys(...) -> list[str]`: Lists the unique filenames of artifacts within a given scope.  
-  * `delete_artifact(...) -> None`: Removes an artifact (and potentially all its versions, depending on implementation).  
-  * `list_versions(...) -> list[int]`: Lists all available version numbers for a specific artifact filename.
 
+* **Interface:** Defined by the abstract base class `BaseArtifactService` (`google.adk.artifacts.base_artifact_service.py`). Any concrete implementation must provide methods for:  
+
+    * `save_artifact(...) -> int`: Stores the artifact data and returns its assigned version number.  
+    * `load_artifact(...) -> Optional[types.Part]`: Retrieves a specific version (or the latest) of an artifact.  
+    * `list_artifact_keys(...) -> list[str]`: Lists the unique filenames of artifacts within a given scope.  
+    * `delete_artifact(...) -> None`: Removes an artifact (and potentially all its versions, depending on implementation).  
+    * `list_versions(...) -> list[int]`: Lists all available version numbers for a specific artifact filename.
 
 * **Configuration:** You provide an instance of an artifact service (e.g., `InMemoryArtifactService`, `GcsArtifactService`) when initializing the `Runner`. The `Runner` then makes this service available to agents and tools via the `InvocationContext`.
 
@@ -72,7 +106,7 @@ from google.adk.agents import LlmAgent # Any agent
 from google.adk.sessions import InMemorySessionService
 
 # Example: Configuring the Runner with an Artifact Service
-my_agent = LlmAgent(name="artifact_user_agent", model="gemini-1.5-flash-latest")
+my_agent = LlmAgent(name="artifact_user_agent", model="gemini-2.0-flash")
 artifact_service = InMemoryArtifactService() # Choose an implementation
 session_service = InMemorySessionService()
 
@@ -85,15 +119,14 @@ runner = Runner(
 # Now, contexts within runs managed by this runner can use artifact methods
 ```
 
-## Artifact Data (`google.genai.types.Part`)
+### Artifact Data (`google.genai.types.Part`)
 
 * **Standard Representation:** Artifact content is universally represented using the `google.genai.types.Part` object, the same structure used for parts of LLM messages.  
-    
-* **Key Attribute (`inline_data`):** For artifacts, the most relevant attribute is `inline_data`, which is a `google.genai.types.Blob` object containing:  
-    
-  * `data` (`bytes`): The raw binary content of the artifact.  
-  * `mime_type` (`str`): A standard MIME type string (e.g., `'application/pdf'`, `'image/png'`, `'audio/mpeg'`) describing the nature of the binary data. **This is crucial for correct interpretation when loading the artifact.**
 
+* **Key Attribute (`inline_data`):** For artifacts, the most relevant attribute is `inline_data`, which is a `google.genai.types.Blob` object containing:  
+
+    * `data` (`bytes`): The raw binary content of the artifact.  
+    * `mime_type` (`str`): A standard MIME type string (e.g., `'application/pdf'`, `'image/png'`, `'audio/mpeg'`) describing the nature of the binary data. **This is crucial for correct interpretation when loading the artifact.**
 
 * **Creation:** You typically create a `Part` for an artifact using its `from_data` class method or by constructing it directly with a `Blob`.
 
@@ -115,13 +148,13 @@ pdf_artifact_alt = types.Part.from_data(data=pdf_bytes, mime_type=pdf_mime_type)
 print(f"Created artifact with MIME type: {pdf_artifact.inline_data.mime_type}")
 ```
 
-## Filename (`str`)
+### Filename (`str`)
 
 * **Identifier:** A simple string used to name and retrieve an artifact within its specific namespace (see below).  
 * **Uniqueness:** Filenames must be unique within their scope (either the session or the user namespace).  
 * **Best Practice:** Use descriptive names, potentially including file extensions (e.g., `"monthly_report.pdf"`, `"user_avatar.jpg"`), although the extension itself doesn't dictate behavior – the `mime_type` does.
 
-## Versioning (`int`)
+### Versioning (`int`)
 
 * **Automatic Versioning:** The artifact service automatically handles versioning. When you call `save_artifact`, the service determines the next available version number (typically starting from 0 and incrementing) for that specific filename and scope.  
 * **Returned by `save_artifact`:** The `save_artifact` method returns the integer version number that was assigned to the newly saved artifact.  
@@ -130,17 +163,16 @@ print(f"Created artifact with MIME type: {pdf_artifact.inline_data.mime_type}")
   * `load_artifact(..., version=N)`: Retrieves the specific version `N`.  
 * **Listing Versions:** The `list_versions` method (on the service, not context) can be used to find all existing version numbers for an artifact.
 
-## Namespacing (Session vs. User)
+### Namespacing (Session vs. User)
 
 * **Concept:** Artifacts can be scoped either to a specific session or more broadly to a user across all their sessions within the application. This scoping is determined by the `filename` format and handled internally by the `ArtifactService`.  
-    
+
 * **Default (Session Scope):** If you use a plain filename like `"report.pdf"`, the artifact is associated with the specific `app_name`, `user_id`, *and* `session_id`. It's only accessible within that exact session context.  
-    
+
   * Internal Path (Example): `app_name/user_id/session_id/report.pdf/<version>` (as seen in `GcsArtifactService._get_blob_name` and `InMemoryArtifactService._artifact_path`)
 
-
 * **User Scope (`"user:"` prefix):** If you prefix the filename with `"user:"`, like `"user:profile.png"`, the artifact is associated only with the `app_name` and `user_id`. It can be accessed or updated from *any* session belonging to that user within the app.  
-    
+
   * Internal Path (Example): `app_name/user_id/user/user:profile.png/<version>` (The `user:` prefix is often kept in the final path segment for clarity, as seen in the service implementations).  
   * **Use Case:** Ideal for data that belongs to the user themselves, independent of a specific conversation, such as profile pictures, user preferences files, or long-term reports.
 
@@ -159,13 +191,13 @@ user_config_filename = "user:settings.json"
 
 These core concepts work together to provide a flexible system for managing binary data within the ADK framework.
 
-# Interacting with Artifacts (via Context Objects)
+## Interacting with Artifacts (via Context Objects)
 
 The primary way you interact with artifacts within your agent's logic (specifically within callbacks or tools) is through methods provided by the `CallbackContext` and `ToolContext` objects. These methods abstract away the underlying storage details managed by the `ArtifactService`.
 
-## Prerequisite: Configuring the `ArtifactService`
+### Prerequisite: Configuring the `ArtifactService`
 
-Before you can use any artifact methods via the context objects, you **must** provide an instance of a `BaseArtifactService` implementation (like `InMemoryArtifactService` or `GcsArtifactService`) when initializing your `Runner`.
+Before you can use any artifact methods via the context objects, you **must** provide an instance of a [`BaseArtifactService` implementation](#available-implementations) (like [`InMemoryArtifactService`](#inmemoryartifactservice) or [`GcsArtifactService`](#gcsartifactservice)) when initializing your `Runner`.
 
 ```py
 from google.adk.runners import Runner
@@ -174,7 +206,7 @@ from google.adk.agents import LlmAgent
 from google.adk.sessions import InMemorySessionService
 
 # Your agent definition
-agent = LlmAgent(name="my_agent", model="gemini-1.5-flash-latest")
+agent = LlmAgent(name="my_agent", model="gemini-2.0-flash")
 
 # Instantiate the desired artifact service
 artifact_service = InMemoryArtifactService()
@@ -190,11 +222,11 @@ runner = Runner(
 
 If no `artifact_service` is configured in the `InvocationContext` (which happens if it's not passed to the `Runner`), calling `save_artifact`, `load_artifact`, or `list_artifacts` on the context objects will raise a `ValueError`.
 
-## Accessing Methods
+### Accessing Methods
 
 The artifact interaction methods are available directly on instances of `CallbackContext` (passed to agent and model callbacks) and `ToolContext` (passed to tool callbacks). Remember that `ToolContext` inherits from `CallbackContext`.
 
-### Saving Artifacts
+#### Saving Artifacts
 
 * **Method:**
 
@@ -203,17 +235,16 @@ context.save_artifact(filename: str, artifact: types.Part) -> int
 ```
 
 * **Available Contexts:** `CallbackContext`, `ToolContext`.  
-    
-* **Action:**  
-    
-  1. Takes a `filename` string (which may include the `"user:"` prefix for user-scoping) and a `types.Part` object containing the artifact data (usually in `artifact.inline_data`).  
-  2. Passes this information to the underlying `artifact_service.save_artifact`.  
-  3. The service stores the data, assigns the next available version number for that filename and scope.  
-  4. Crucially, the context automatically records this action by adding an entry to the current event's `actions.artifact_delta` dictionary (defined in `google.adk.events.event_actions.py`). This delta maps the `filename` to the newly assigned `version`.
 
+* **Action:**  
+
+    1. Takes a `filename` string (which may include the `"user:"` prefix for user-scoping) and a `types.Part` object containing the artifact data (usually in `artifact.inline_data`).  
+    2. Passes this information to the underlying `artifact_service.save_artifact`.  
+    3. The service stores the data, assigns the next available version number for that filename and scope.  
+    4. Crucially, the context automatically records this action by adding an entry to the current event's `actions.artifact_delta` dictionary (defined in `google.adk.events.event_actions.py`). This delta maps the `filename` to the newly assigned `version`.
 
 * **Returns:** The integer `version` number assigned to the saved artifact.  
-    
+
 * **Code Example (within a hypothetical tool or callback):**
 
 ```py
@@ -244,7 +275,7 @@ async def save_generated_report(context: CallbackContext, report_bytes: bytes):
 # await save_generated_report(callback_context, report_data)
 ```
 
-### Loading Artifacts
+#### Loading Artifacts
 
 * **Method:**
 
@@ -253,56 +284,55 @@ context.load_artifact(filename: str, version: Optional[int] = None) -> Optional[
 ```
 
 * **Available Contexts:** `CallbackContext`, `ToolContext`.  
-    
-* **Action:**  
-    
-  1. Takes a `filename` string (potentially including `"user:"`).  
-  2. Optionally takes an integer `version`. If `version` is `None` (the default), it requests the *latest* version from the service. If a specific integer is provided, it requests that exact version.  
-  3. Calls the underlying `artifact_service.load_artifact`.  
-  4. The service attempts to retrieve the specified artifact.
 
+* **Action:**  
+
+    1. Takes a `filename` string (potentially including `"user:"`).  
+    2. Optionally takes an integer `version`. If `version` is `None` (the default), it requests the *latest* version from the service. If a specific integer is provided, it requests that exact version.  
+    3. Calls the underlying `artifact_service.load_artifact`.  
+    4. The service attempts to retrieve the specified artifact.
 
 * **Returns:** A `types.Part` object containing the artifact data if found, or `None` if the artifact (or the specified version) does not exist.  
-    
+
 * **Code Example (within a hypothetical tool or callback):**
 
-```py
-import google.genai.types as types
-from google.adk.agents.callback_context import CallbackContext # Or ToolContext
+    ```py
+    import google.genai.types as types
+    from google.adk.agents.callback_context import CallbackContext # Or ToolContext
 
-async def process_latest_report(context: CallbackContext):
-    """Loads the latest report artifact and processes its data."""
-    filename = "generated_report.pdf"
-    try:
-        # Load the latest version
-        report_artifact = context.load_artifact(filename=filename)
+    async def process_latest_report(context: CallbackContext):
+        """Loads the latest report artifact and processes its data."""
+        filename = "generated_report.pdf"
+        try:
+            # Load the latest version
+            report_artifact = context.load_artifact(filename=filename)
 
-        if report_artifact and report_artifact.inline_data:
-            print(f"Successfully loaded latest artifact '{filename}'.")
-            print(f"MIME Type: {report_artifact.inline_data.mime_type}")
-            # Process the report_artifact.inline_data.data (bytes)
-            pdf_bytes = report_artifact.inline_data.data
-            print(f"Report size: {len(pdf_bytes)} bytes.")
-            # ... further processing ...
-        else:
-            print(f"Artifact '{filename}' not found.")
+            if report_artifact and report_artifact.inline_data:
+                print(f"Successfully loaded latest artifact '{filename}'.")
+                print(f"MIME Type: {report_artifact.inline_data.mime_type}")
+                # Process the report_artifact.inline_data.data (bytes)
+                pdf_bytes = report_artifact.inline_data.data
+                print(f"Report size: {len(pdf_bytes)} bytes.")
+                # ... further processing ...
+            else:
+                print(f"Artifact '{filename}' not found.")
 
-        # Example: Load a specific version (if version 0 exists)
-        # specific_version_artifact = context.load_artifact(filename=filename, version=0)
-        # if specific_version_artifact:
-        #     print(f"Loaded version 0 of '{filename}'.")
+            # Example: Load a specific version (if version 0 exists)
+            # specific_version_artifact = context.load_artifact(filename=filename, version=0)
+            # if specific_version_artifact:
+            #     print(f"Loaded version 0 of '{filename}'.")
 
-    except ValueError as e:
-        print(f"Error loading artifact: {e}. Is ArtifactService configured?")
-    except Exception as e:
-        # Handle potential storage errors
-        print(f"An unexpected error occurred during artifact load: {e}")
+        except ValueError as e:
+            print(f"Error loading artifact: {e}. Is ArtifactService configured?")
+        except Exception as e:
+            # Handle potential storage errors
+            print(f"An unexpected error occurred during artifact load: {e}")
 
-# --- Example Usage Concept ---
-# await process_latest_report(callback_context)
-```
+    # --- Example Usage Concept ---
+    # await process_latest_report(callback_context)
+    ```
 
-### Listing Artifact Filenames (Tool Context Only)
+#### Listing Artifact Filenames (Tool Context Only)
 
 * **Method:**
 
@@ -311,11 +341,11 @@ tool_context.list_artifacts() -> list[str]
 ```
 
 * **Available Context:** `ToolContext` only. This method is *not* available on the base `CallbackContext`.  
-    
+
 * **Action:** Calls the underlying `artifact_service.list_artifact_keys` to get a list of all unique artifact filenames accessible within the current scope (including both session-specific files and user-scoped files prefixed with `"user:"`).  
-    
+
 * **Returns:** A sorted `list` of `str` filenames.  
-    
+
 * **Code Example (within a tool function):**
 
 ```py
@@ -343,23 +373,23 @@ def list_user_files(tool_context: ToolContext) -> str:
 # list_files_tool = FunctionTool(func=list_user_files)
 ```
 
-These context methods provide a convenient and consistent way to manage binary data persistence within the ADK, regardless of the chosen backend storage implementation (`InMemoryArtifactService`, `GcsArtifactService`, etc.).
+These context methods provide a convenient and consistent way to manage binary data persistence within ADK, regardless of the chosen backend storage implementation (`InMemoryArtifactService`, `GcsArtifactService`, etc.).
 
-# Available Implementations 
+## Available Implementations
 
-The Agent Development Kit (ADK) provides concrete implementations of the `BaseArtifactService` interface, offering different storage backends suitable for various development stages and deployment needs. These implementations handle the details of storing, versioning, and retrieving artifact data based on the `app_name`, `user_id`, `session_id`, and `filename` (including the `user:` namespace prefix).
+ADK provides concrete implementations of the `BaseArtifactService` interface, offering different storage backends suitable for various development stages and deployment needs. These implementations handle the details of storing, versioning, and retrieving artifact data based on the `app_name`, `user_id`, `session_id`, and `filename` (including the `user:` namespace prefix).
 
-## InMemoryArtifactService
+### InMemoryArtifactService
 
 * **Source File:** `google.adk.artifacts.in_memory_artifact_service.py`  
 * **Storage Mechanism:** Uses a Python dictionary (`self.artifacts`) held in the application's memory to store artifacts. The dictionary keys represent the artifact path (incorporating app, user, session/user-scope, and filename), and the values are lists of `types.Part`, where each element in the list corresponds to a version (index 0 is version 0, index 1 is version 1, etc.).  
 * **Key Features:**  
-  * **Simplicity:** Requires no external setup or dependencies beyond the core ADK library.  
-  * **Speed:** Operations are typically very fast as they involve in-memory dictionary lookups and list manipulations.  
-  * **Ephemeral:** All stored artifacts are **lost** when the Python process running the application terminates. Data does not persist between application restarts.  
+    * **Simplicity:** Requires no external setup or dependencies beyond the core ADK library.  
+    * **Speed:** Operations are typically very fast as they involve in-memory dictionary lookups and list manipulations.  
+    * **Ephemeral:** All stored artifacts are **lost** when the Python process running the application terminates. Data does not persist between application restarts.  
 * **Use Cases:**  
-  * Ideal for local development and testing where persistence is not required.  
-  * Suitable for short-lived demonstrations or scenarios where artifact data is purely temporary within a single run of the application.  
+    * Ideal for local development and testing where persistence is not required.  
+    * Suitable for short-lived demonstrations or scenarios where artifact data is purely temporary within a single run of the application.  
 * **Instantiation:**
 
 ```py
@@ -372,25 +402,23 @@ in_memory_service = InMemoryArtifactService()
 # runner = Runner(..., artifact_service=in_memory_service)
 ```
 
-## 
-
-## GcsArtifactService
+### GcsArtifactService
 
 * **Source File:** `google.adk.artifacts.gcs_artifact_service.py`  
 * **Storage Mechanism:** Leverages Google Cloud Storage (GCS) for persistent artifact storage. Each version of an artifact is stored as a separate object within a specified GCS bucket.  
 * **Object Naming Convention:** It constructs GCS object names (blob names) using a hierarchical path structure, typically:  
-  * Session-scoped: `{app_name}/{user_id}/{session_id}/{filename}/{version}`  
-  * User-scoped: `{app_name}/{user_id}/user/{filename}/{version}` (Note: The service handles the `user:` prefix in the filename to determine the path structure).  
+    * Session-scoped: `{app_name}/{user_id}/{session_id}/{filename}/{version}`  
+    * User-scoped: `{app_name}/{user_id}/user/{filename}/{version}` (Note: The service handles the `user:` prefix in the filename to determine the path structure).  
 * **Key Features:**  
-  * **Persistence:** Artifacts stored in GCS persist across application restarts and deployments.  
-  * **Scalability:** Leverages the scalability and durability of Google Cloud Storage.  
-  * **Versioning:** Explicitly stores each version as a distinct GCS object.  
-  * **Configuration Required:** Needs configuration with a target GCS `bucket_name`.  
-  * **Permissions Required:** The application environment needs appropriate credentials and IAM permissions to read from and write to the specified GCS bucket.  
+    * **Persistence:** Artifacts stored in GCS persist across application restarts and deployments.  
+    * **Scalability:** Leverages the scalability and durability of Google Cloud Storage.  
+    * **Versioning:** Explicitly stores each version as a distinct GCS object.  
+    * **Configuration Required:** Needs configuration with a target GCS `bucket_name`.  
+    * **Permissions Required:** The application environment needs appropriate credentials and IAM permissions to read from and write to the specified GCS bucket.  
 * **Use Cases:**  
-  * Production environments requiring persistent artifact storage.  
-  * Scenarios where artifacts need to be shared across different application instances or services (by accessing the same GCS bucket).  
-  * Applications needing long-term storage and retrieval of user or session data.  
+    * Production environments requiring persistent artifact storage.  
+    * Scenarios where artifacts need to be shared across different application instances or services (by accessing the same GCS bucket).  
+    * Applications needing long-term storage and retrieval of user or session data.  
 * **Instantiation:**
 
 ```py
@@ -417,46 +445,7 @@ except Exception as e:
 
 Choosing the appropriate `ArtifactService` implementation depends on your application's requirements for data persistence, scalability, and operational environment.
 
-# Common Use Cases
-
-Artifacts provide a flexible way to handle binary data within your ADK applications. Here are some typical scenarios where they prove valuable:
-
-* **Generated Reports/Files:**  
-    
-  * A tool or agent generates a report (e.g., a PDF analysis, a CSV data export, an image chart).  
-  * The tool uses `tool_context.save_artifact("monthly_report_oct_2024.pdf", report_part)` to store the generated file.  
-  * The user can later ask the agent to retrieve this report, which might involve another tool using `tool_context.load_artifact("monthly_report_oct_2024.pdf")` or listing available reports using `tool_context.list_artifacts()`.
-
-
-* **Handling User Uploads:**  
-    
-  * A user uploads a file (e.g., an image for analysis, a document for summarization) through a front-end interface.  
-  * The application backend receives the file, creates a `types.Part` from its bytes and MIME type, and uses the `runner.session_service` (or similar mechanism outside a direct agent run) or a dedicated tool/callback within a run via `context.save_artifact` to store it, potentially using the `user:` namespace if it should persist across sessions (e.g., `user:uploaded_image.jpg`).  
-  * An agent can then be prompted to process this uploaded file, using `context.load_artifact("user:uploaded_image.jpg")` to retrieve it.
-
-
-* **Storing Intermediate Binary Results:**  
-    
-  * An agent performs a complex multi-step process where one step generates intermediate binary data (e.g., audio synthesis, simulation results).  
-  * This data is saved using `context.save_artifact` with a temporary or descriptive name (e.g., `"temp_audio_step1.wav"`).  
-  * A subsequent agent or tool in the flow (perhaps in a `SequentialAgent` or triggered later) can load this intermediate artifact using `context.load_artifact` to continue the process.
-
-
-* **Persistent User Data:**  
-    
-  * Storing user-specific configuration or data that isn't a simple key-value state.  
-  * An agent saves user preferences or a profile picture using `context.save_artifact("user:profile_settings.json", settings_part)` or `context.save_artifact("user:avatar.png", avatar_part)`.  
-  * These artifacts can be loaded in any future session for that user to personalize their experience.
-
-
-* **Caching Generated Binary Content:**  
-    
-  * An agent frequently generates the same binary output based on certain inputs (e.g., a company logo image, a standard audio greeting).  
-  * Before generating, a `before_tool_callback` or `before_agent_callback` checks if the artifact exists using `context.load_artifact`.  
-  * If it exists, the cached artifact is used, skipping the generation step.  
-  * If not, the content is generated, and `context.save_artifact` is called in an `after_tool_callback` or `after_agent_callback` to cache it for next time.
-
-# Best Practices
+## Best Practices
 
 To use artifacts effectively and maintainably:
 
@@ -466,11 +455,11 @@ To use artifacts effectively and maintainably:
 * **Understand Versioning:** Remember that `load_artifact()` without a specific `version` argument retrieves the *latest* version. If your logic depends on a specific historical version of an artifact, be sure to provide the integer version number when loading.  
 * **Use Namespacing (`user:`) Deliberately:** Only use the `"user:"` prefix for filenames when the data truly belongs to the user and should be accessible across all their sessions. For data specific to a single conversation or session, use regular filenames without the prefix.  
 * **Error Handling:**  
-  * Always check if an `artifact_service` is actually configured before calling context methods (`save_artifact`, `load_artifact`, `list_artifacts`) – they will raise a `ValueError` if the service is `None`. Wrap calls in `try...except ValueError`.  
-  * Check the return value of `load_artifact`, as it will be `None` if the artifact or version doesn't exist. Don't assume it always returns a `Part`.  
-  * Be prepared to handle exceptions from the underlying storage service, especially with `GcsArtifactService` (e.g., `google.api_core.exceptions.Forbidden` for permission issues, `NotFound` if the bucket doesn't exist, network errors).  
+    * Always check if an `artifact_service` is actually configured before calling context methods (`save_artifact`, `load_artifact`, `list_artifacts`) – they will raise a `ValueError` if the service is `None`. Wrap calls in `try...except ValueError`.  
+    * Check the return value of `load_artifact`, as it will be `None` if the artifact or version doesn't exist. Don't assume it always returns a `Part`.  
+    * Be prepared to handle exceptions from the underlying storage service, especially with `GcsArtifactService` (e.g., `google.api_core.exceptions.Forbidden` for permission issues, `NotFound` if the bucket doesn't exist, network errors).  
 * **Size Considerations:** Artifacts are suitable for typical file sizes, but be mindful of potential costs and performance impacts with extremely large files, especially with cloud storage. `InMemoryArtifactService` can consume significant memory if storing many large artifacts. Evaluate if very large data might be better handled through direct GCS links or other specialized storage solutions rather than passing entire byte arrays in-memory.  
 * **Cleanup Strategy:** For persistent storage like `GcsArtifactService`, artifacts remain until explicitly deleted. If artifacts represent temporary data or have a limited lifespan, implement a strategy for cleanup. This might involve:  
-  * Using GCS lifecycle policies on the bucket.  
-  * Building specific tools or administrative functions that utilize the `artifact_service.delete_artifact` method (note: delete is *not* exposed via context objects for safety).  
-  * Carefully managing filenames to allow pattern-based deletion if needed.
+    * Using GCS lifecycle policies on the bucket.  
+    * Building specific tools or administrative functions that utilize the `artifact_service.delete_artifact` method (note: delete is *not* exposed via context objects for safety).  
+    * Carefully managing filenames to allow pattern-based deletion if needed.

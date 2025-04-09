@@ -14,7 +14,7 @@ hide:
   <b>Build, evaluate, and deploy sophisticated AI agents with code-first flexibility!</b>
 </p>
 
-<p style="text-align:center;"> The Agent Development Kit (ADK) is an
+<p style="text-align:center;"> Agent Development Kit (ADK) is an
 open-source, code-first Python toolkit designed to simplify building,
 evaluating, and deploying advanced AI agents anywhere. It's designed for
 developers building AI applications or teams needing to rapidly prototype and
@@ -30,7 +30,7 @@ deploy robust agent-based solutions.</p>
 
 <p style="text-align:center;">
   <a href="get-started/quickstart/" class="md-button">Quickstart</a>
-  <a href="http://github.com/google/adk-samples" class="md-button">Sample agents</a>
+  <a href="http://github.com/google/adk-samples" class="md-button" target="_blank">Sample agents</a>
   <a href="reference/" class="md-button">API reference</a>
 </p>
 
@@ -65,23 +65,23 @@ debugging, versioning, and deployment.
     Exec), create custom functions, integrate 3rd-party libraries (LangChain,
     CrewAI), or even use other agents as tools.
 
-    [**Browse tools**](tools/overview.md)
+    [**Browse tools**](tools/index.md)
 
 -   :material-transit-connection-variant: **Flexible Orchestration**
 
     ---
 
-    Define workflows using container agents (`Sequential`, `Parallel`, `Loop`)
+    Define workflows using workflow agents (`Sequential`, `Parallel`, `Loop`)
     for predictable pipelines, or leverage LLM-driven dynamic routing
     (`LlmAgent` transfer) for adaptive behavior.
 
-    [**Learn about agents**](agents/overview.md)
+    [**Learn about agents**](agents/index.md)
 
 -   :material-console-line: **Integrated Developer Experience**
 
     ---
 
-    Develop, test, and debug locally with a powerful CLI and a visual Web UI.
+    Develop, test, and debug locally with a powerful CLI and an interactive dev UI.
     Inspect events, state, and agent execution step-by-step.
 
     [**Running your agent**](get-started/running-the-agent.md)
@@ -104,7 +104,7 @@ debugging, versioning, and deployment.
     Vertex AI Agent Engine, or integrate into custom infrastructure using Cloud
     Run or Docker.
 
-    [**Deploy agents**](deploy/overview.md)
+    [**Deploy agents**](deploy/index.md)
 
 </div>
 

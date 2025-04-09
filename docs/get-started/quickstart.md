@@ -1,78 +1,37 @@
 # Quickstart
 
 This quickstart guides you through installing the Agent Development Kit (ADK),
-setting up a basic agent, and running its developer UI, tailored to your chosen
-environment.
+setting up a basic agent with multiple tools, and running it locally either in the terminal or in the interactive, browser-based dev UI.
 
-<img src="../../assets/quickstart.png" alt="Quickstart setup">
+<!-- <img src="../../assets/quickstart.png" alt="Quickstart setup"> -->
 
-<div style="color:red;border: 1px solid red;">
-# ## **Pre-launch instructions**
- (TODO: delete this section before launch)
-
-* **TEST ONLY USING IDE (Local Setup)**
-
-<table>
-<td>
-
-  1. Open Cloud Shell or other terminal, and authenticate to your @google.com
-     email:
-  ```
-  gcloud auth login
-  ```
-
-  2. Set your default project (optional)
-  ```
-  gcloud config set project your-project-id
-  ```
-
-
-  2. Download the latest .whl file so that you can install the SDK locally:
-  ```
-  # download the latest whl
-  gcloud storage cp gs://agent_framework/latest/*.whl .
-
-  # sort filenames and fetch latest whl as `pkg`
-  pkg=$(find . -maxdepth 1 -name "google_adk*.whl" -print | sort -V | tail -n1)
-
-  echo $pkg
-  ```
-
-  3. Install the package
-  ```
-  # install whl
-  pip install $pkg --force-reinstall
-  ```
-
-
-</td>
-</table>
-</div>
-
-
-This quickstart assumes a local IDE (VS Code, PyCharm, etc.) with Python 3.10+
+This quickstart assumes a local IDE (VS Code, PyCharm, etc.) with Python 3.9+
 and terminal access. This method runs the application entirely on your machine
 and is recommended for internal development.
 
-**1. Setup Environment & Install ADK**
+## 1. Setup Environment & Install ADK {#venv-install}
 
-*   Create & Activate Virtual Environment (Recommended):
-    ```bash
-    # Create
-    python -m venv .venv
-    # Activate (each new terminal)
-    # macOS/Linux: source .venv/bin/activate
-    # Windows CMD: .venv\Scripts\activate.bat
-    # Windows PowerShell: .venv\Scripts\Activate.ps1
-    ```
-*   Install ADK:
-    ```bash
-    pip install google-adk
-    ```
+Create & Activate Virtual Environment (Recommended):
 
-**2. Create Agent Project**
+```bash
+# Create
+python -m venv .venv
+# Activate (each new terminal)
+# macOS/Linux: source .venv/bin/activate
+# Windows CMD: .venv\Scripts\activate.bat
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+```
+
+Install ADK:
+
+```bash
+pip install google-adk
+```
+
+## 2. Create Agent Project {#create-agent-project}
 
 Using the terminal, create the folder structure:
+
 ```bash
 mkdir multi_tool_agent/
 touch \
@@ -80,8 +39,10 @@ multi_tool_agent/__init__.py \
 multi_tool_agent/agent.py \
 multi_tool_agent/.env
 ```
+
 Your structure:
-```
+
+```console
 parent_folder/
     multi_tool_agent/
         __init__.py
@@ -95,16 +56,17 @@ Copy paste the following code to the respective files:
 --8<-- "examples/python/snippets/get-started/multi_tool_agent/__init__.py"
 ```
 
-```python title="multi_tool_agent/.env"
---8<-- "examples/python/snippets/get-started/multi_tool_agent/.env"
-```
-
 ```python title="multi_tool_agent/agent.py"
 --8<-- "examples/python/snippets/get-started/multi_tool_agent/agent.py"
 ```
 
-<br>
-**3. Setup the LLM Model**
+For `.env` below, just copy and paste the following code for now, as more instructions are describe in the next section on [Setup the model](#setup-the-model).
+
+```python title="multi_tool_agent/.env"
+--8<-- "examples/python/snippets/get-started/multi_tool_agent/.env"
+```
+
+## 3. Setup the model {#setup-the-model}
 
 Your agent's ability to understand user requests and generate responses is
 powered by a Large Language Model (LLM). Your agent needs to make secure calls
@@ -134,12 +96,12 @@ agent will be unable to function.
         GOOGLE_CLOUD_LOCATION=LOCATION
         ```
 
-**4. Run Your Agent**
+## 4. Run Your Agent {#run-your-agent}
 
 Using the terminal, navigate to the parent directory of your agent project
 (e.g. using `cd ..`):
 
-```
+```console
 parent_folder/      <-- navigate to this directory
     multi_tool_agent/
         __init__.py
@@ -150,24 +112,31 @@ parent_folder/      <-- navigate to this directory
 === "adk run"
 
     Run the following command, to chat with your Google Search agent.
+
     ```
     adk run multi_tool_agent
     ```
     To exit, use Cmd/Ctrl+C.
 
-=== "adk web"
-
-    Run the following command to launch the **developer UI**.
+=== "adk web (dev UI)"
+    Run the following command to launch the **dev UI**.
 
     ```
     adk web
     ```
 
-Open the URL provided (usually `http://localhost:8000` or
-`http://127.0.0.1:8000`) **directly in your browser**. This connection stays
-entirely on your local machine. Select `multi_tool_agent` and interact.
+    Open the URL provided (usually `http://localhost:8000` or
+    `http://127.0.0.1:8000`) **directly in your browser**. This connection stays
+    entirely on your local machine. Select `multi_tool_agent` and interact with the agent.
 
-## 📝 Example prompts to try
+    !!!note
+        
+        If you do not see "my_sample_agent" in the dropdown menu, make sure you are running `adk web` in the **parent folder** of your agent folder (i.e. the parent folder of my_sample_agent).
+
+    1. In the top-left corner of the UI, you can select your agent in the dropdown. Select "my_sample_agent".
+    2. Now you can chat with your agent.
+
+### 📝 Example prompts to try
 
 * What is the weather in New York?
 * What is the time in New York?
@@ -175,17 +144,13 @@ entirely on your local machine. Select `multi_tool_agent` and interact.
 * What is the time in Paris?
 
 ## 🎉 Congratulations!
-You've successfully created and interacted with your first
-agent using ADK!
+
+You've successfully created and interacted with your first agent using ADK!
 
 ---
+
 ## 🛣️ Next steps
 
-Regardless of your chosen environment, you've successfully created and
-interacted with your first agent using ADK!
-
-*   **Delve into advanced configuration:** Explore the
-    [setup](setup-and-installation.md) section for deeper dives into project
-    structure, configuration, and other interfaces.
-*   **Understand Core Concepts:** Learn about
-    [agents concepts](../agents/overview.md).
+* **Go to the tutorial**: Learn how to add memory, session, state to your agent: [tutorial](tutorial.md).
+* **Delve into advanced configuration:** Explore the [setup](installation.md) section for deeper dives into project structure, configuration, and other interfaces.
+* **Understand Core Concepts:** Learn about [agents concepts](../agents/index.md).
