@@ -124,11 +124,11 @@ Stop `adk web` by pressing `Ctrl-C` on the console.
 
 ### Note on ADK Streaming
 
-We have checked that our basic search agent works with the ADK Streaming. The following features will be supported in the future versions of the ADK Streaming: Callback, LongRunningTool, ExampleTool, and Shell agent (e.g. SequentialAgent).
+The following features will be supported in the future versions of the ADK Streaming: Callback, LongRunningTool, ExampleTool, and Shell agent (e.g. SequentialAgent).
 
 ## 5. Building a Custom Streaming App (Optional) {#5.-build-custom-app}
 
-In the following sections, we will learn how to build your own web application capable of the streaming communication using [FastAPI](https://fastapi.tiangolo.com/).
+In the previous section, we have checked that our basic search agent works with the ADK Streaming using `adk web` tool. In the this section, we will learn how to build your own web application capable of the streaming communication using [FastAPI](https://fastapi.tiangolo.com/).
 
 Add `static` directory under `app`, and add `main.py` and `index.html` as empty files, as in the following structure:
 
