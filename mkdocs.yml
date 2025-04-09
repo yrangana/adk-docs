@@ -40,9 +40,6 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-# TODO: Custom color palette
-#  palette:
-#    primary: custom
   features:
     - content.code.annotate
     - content.code.copy
@@ -85,7 +82,6 @@ markdown_extensions:
 # Plugins
 plugins:
   - search
-  # - social
 
 # Navigation
 nav:
@@ -98,9 +94,6 @@ nav:
     - Tutorial: get-started/tutorial.md
     - Sample agents: https://github.com/google/adk-samples
     - About ADK: get-started/about.md
-    # - Introduction: get-started/introduction.md
-    # - Running the Agent: get-started/running-the-agent.md
-    # - Weather Agent: get-started/weather-agent-sample.md
   - Agents:
     - agents/index.md
     - LLM agents: agents/llm-agents.md
@@ -146,7 +139,6 @@ nav:
   - Guides:
     - Evaluate agents: guides/evaluate-agents.md
     - Responsible Agents: guides/responsible-agents.md
-    - Troubleshooting: guides/troubleshooting.md
   - API Reference:
     - API Reference: api-reference/index.md
   - Resources:
