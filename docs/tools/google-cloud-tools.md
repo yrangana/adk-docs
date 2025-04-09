@@ -5,7 +5,7 @@ Google Cloud tools make it easier to connect your agents to Google Cloud’s pro
 * **millions of custom APIs** which developers host in Apigee,
 * **100s** of **prebuilt connectors** to enterprise systems like salesforce, workday and SAP
 * **Automation workflows** built using application integration  
-* Databases like Spanner, AlloyDB, Postgres and more using the GenAI Toolbox for databases
+* Databases like Spanner, AlloyDB, Postgres and more using the MCP Toolbox for databases
 
 ![Google Cloud Tools](../assets/google_cloud_tools.svg)
 
