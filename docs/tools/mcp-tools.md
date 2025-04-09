@@ -327,7 +327,7 @@ You will create a standard Python MCP server application using the model-context
 Install the MCP server library in the same environment as ADK:
 
 ```shell
-pip install model-context-protocol
+pip install mcp
 ```
 
 ### Step 1: Create the MCP Server Script
@@ -453,15 +453,36 @@ if __name__ == "__main__":
 
 ```
 
-### Step 3: Run the MCP Server
+### Step 3: Test your MCP Server with ADK
 
-Execute the script from your terminal (ensure necessary libraries like model-context-protocol and google-adk are installed in your environment):
+Follow the same instructions in “Example 1: File System MCP Server” and create a MCP client. This time use your MCP Server file created above as input command:
 
-```shell
-python adk_mcp_server.py
+```py
+# ./adk_agent_samples/mcp_agent/agent.py
+
+# ...
+
+async def get_tools_async():
+  """Gets tools from the File System MCP Server."""
+  print("Attempting to connect to MCP Filesystem server...")
+  tools, exit_stack = await MCPToolset.from_server(
+      # Use StdioServerParameters for local process communication
+      connection_params=StdioServerParameters(
+          command='python3', # Command to run the server
+          args=[
+                "/absolute/path/to/adk_mcp_server.py"],
+      )
+  )
 ```
 
-The script will print startup messages and then wait for an MCP client to connect via its standard input/output. Any MCP-compliant client (like Claude Desktop, or a custom client using the MCP libraries) can now connect to this process, discover the load\_web\_page tool, and invoke it. The server will print log messages indicating received requests and ADK tool execution. Refer to the [documentation](https://modelcontextprotocol.io/quickstart/server#core-mcp-concepts), to try it out with Claude Desktop.
+Execute the agent script from your terminal similar to above (ensure necessary libraries like model-context-protocol and google-adk are installed in your environment):
+
+```shell
+cd ./adk_agent_samples
+python3 ./mcp_agent/agent.py
+```
+
+The script will print startup messages and then wait for an MCP client to connect via its standard input/output to your MCP Server in adk\_mcp\_server.py. Any MCP-compliant client (like Claude Desktop, or a custom client using the MCP libraries) can now connect to this process, discover the load\_web\_page tool, and invoke it. The server will print log messages indicating received requests and ADK tool execution. Refer to the [documentation](https://modelcontextprotocol.io/quickstart/server#core-mcp-concepts), to try it out with Claude Desktop.
 
 ## Key considerations
 

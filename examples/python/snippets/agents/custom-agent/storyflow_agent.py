@@ -93,7 +93,7 @@ class StoryFlowAgent(BaseAgent):
             sequential_agent=sequential_agent,
             sub_agents=sub_agents_list, # Pass the sub_agents list directly
         )
-    # --8<-- [end:init]
+# --8<-- [end:init]
 
     # --8<-- [start:executionlogic]
     @override
@@ -215,7 +215,6 @@ story_flow_agent = StoryFlowAgent(
     grammar_check=grammar_check,
     tone_check=tone_check,
 )
-# --8<-- [end:story_flow_agent]
 
 # --- Setup Runner and Session ---
 session_service = InMemorySessionService()
@@ -272,3 +271,4 @@ def call_agent(user_input_topic: str):
 
 # --- Run the Agent ---
 call_agent("a lonely robot finding a friend in a junkyard")
+# --8<-- [end:story_flow_agent]

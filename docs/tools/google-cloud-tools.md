@@ -242,7 +242,7 @@ When running the agent, make sure to run adk web in project\_root\_folder
 
 ---
 
-## 3. **GenAI Toolbox**
+## 3. **Toolbox Tools for Databases**
 
 [MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an open source MCP server for databases. It was designed with enterprise-grade and production-quality in mind. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
@@ -272,14 +272,18 @@ pip install toolbox-langchain
 Once you’ve Toolbox server is configured and up and running, you can load tools from your server using the ADK:
 
 ```py
-from google.adk.tools import ToolboxTooltoolbox = ToolboxTool("https://127.0.0.1:5000")
+from google.adk.tools import ToolboxTool
+
+toolbox = ToolboxTool("https://127.0.0.1:5000")
 
 # Load all tools
 tools = toolbox.get_toolset(),
 # Load a specific set of tools
 tools = toolbox.get_toolset(toolset_name='my-toolset-name'),
 # Load single tool
-tools = toolbox.get_toolset(tool_name='my-tool-name'),root_agent = Agent(  
+tools = toolbox.get_toolset(tool_name='my-tool-name'),
+
+root_agent = Agent(  
     ...,
     tools=tools # Provide the list of tools to the Agent
 
