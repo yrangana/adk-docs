@@ -85,7 +85,7 @@ plugins:
 
 # Navigation
 nav:
-  - Home: /
+  - Home: index.md
   - Get Started:
     - get-started/index.md
     - Installation: get-started/installation.md

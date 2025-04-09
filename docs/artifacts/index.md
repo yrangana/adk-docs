@@ -39,7 +39,7 @@ print(f"Artifact Part created with MIME type: {pdf_artifact_part.inline_data.mim
 
 **Concept:** The **Artifact Service** is the central component responsible for the actual storage logic. It's an implementation of the `BaseArtifactService` interface and determines the backend used for persistence (like memory or cloud storage).
 
-**Configuration:** You provide an instance of a chosen Artifact Service when initializing the `Runner`. The `Runner` then makes this service available to your agents and tools during execution via the [Invocation Context](../runtime/invocation-context.md).
+**Configuration:** You provide an instance of a chosen Artifact Service when initializing the `Runner`. The `Runner` then makes this service available to your agents and tools during execution via the [Invocation Context](../runtime/index.md).
 
 ```python
 from google.adk.runners import Runner

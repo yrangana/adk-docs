@@ -30,8 +30,9 @@ deploy robust agent-based solutions.</p>
 
 <p style="text-align:center;">
   <a href="get-started/quickstart/" class="md-button">Quickstart</a>
-  <a href="http://github.com/google/adk-samples" class="md-button" target="_blank">Sample agents</a>
-  <a href="reference/" class="md-button">API reference</a>
+  <a href="get-started/tutorial/" class="md-button">Tutorial</a>
+  <a href="http://github.com/google/adk-samples" class="md-button" target="_blank">Sample Agents</a>
+  <a href="api-reference/" class="md-button">API Reference</a>
 </p>
 
 <!-- [TODO: Placeholder for diagram] -->
@@ -47,6 +48,16 @@ behavior, orchestration, and tool use directly in Python, enabling robust
 debugging, versioning, and deployment.
 
 <div class="grid cards" markdown>
+
+-   :material-transit-connection-variant: **Flexible Orchestration**
+
+    ---
+
+    Define workflows using workflow agents (`Sequential`, `Parallel`, `Loop`)
+    for predictable pipelines, or leverage LLM-driven dynamic routing
+    (`LlmAgent` transfer) for adaptive behavior.
+
+    [**Learn about agents**](agents/index.md)
 
 -   :material-graph: **Multi-Agent Architecture**
 
@@ -67,24 +78,15 @@ debugging, versioning, and deployment.
 
     [**Browse tools**](tools/index.md)
 
--   :material-transit-connection-variant: **Flexible Orchestration**
+-   :material-rocket-launch-outline: **Deployment Ready**
 
     ---
 
-    Define workflows using workflow agents (`Sequential`, `Parallel`, `Loop`)
-    for predictable pipelines, or leverage LLM-driven dynamic routing
-    (`LlmAgent` transfer) for adaptive behavior.
+    Containerize and deploy your agents anywhere – run locally, scale with
+    Vertex AI Agent Engine, or integrate into custom infrastructure using Cloud
+    Run or Docker.
 
-    [**Learn about agents**](agents/index.md)
-
--   :material-console-line: **Integrated Developer Experience**
-
-    ---
-
-    Develop, test, and debug locally with a powerful CLI and an interactive dev UI.
-    Inspect events, state, and agent execution step-by-step.
-
-    [**Running your agent**](get-started/running-the-agent.md)
+    [**Deploy agents**](deploy/index.md)
 
 -   :material-clipboard-check-outline: **Built-in Evaluation**
 
@@ -96,15 +98,14 @@ debugging, versioning, and deployment.
 
     [**Evaluate agents**](guides/evaluate-agents.md)
 
--   :material-rocket-launch-outline: **Deployment Ready**
+-   :material-console-line: **Building Responsible Agents**
 
     ---
 
-    Containerize and deploy your agents anywhere – run locally, scale with
-    Vertex AI Agent Engine, or integrate into custom infrastructure using Cloud
-    Run or Docker.
+    Learn how to building powerful and trustworthy agents by implementing
+    responsible AI patterns and best practices into your agent's design.
 
-    [**Deploy agents**](deploy/index.md)
+    [**Responsible agents**](guides/responsible-agents.md)
 
 </div>
 

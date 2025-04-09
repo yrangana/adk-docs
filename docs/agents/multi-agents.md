@@ -54,7 +54,7 @@ coordinator = LlmAgent(
 ADK includes specialized agents derived from `BaseAgent` that don't perform tasks themselves but orchestrate the execution flow of their `sub_agents`.
 
 * **[`SequentialAgent`](workflow-agents/sequential-agents.md):** Executes its `sub_agents` one after another in the order they are listed.
-    * **Context:** Passes the *same* [`InvocationContext`](../runtime/invocation-context.md) sequentially, allowing agents to easily pass results via shared state.
+    * **Context:** Passes the *same* [`InvocationContext`](../runtime/index.md) sequentially, allowing agents to easily pass results via shared state.
 
     ```python
     # Conceptual Example: Sequential Pipeline
