@@ -125,7 +125,7 @@ from agents.sessions import InMemorySessionService
 
 # Step 1: Define your agent:
 root_agent = Agent(name="my_agent",
-                   model="gemini-2.0-flash",
+                   model="gemini-2.0-flash-exp",
  		      instruction="Answer questions.")
 
 # Step 2: Initiate Session

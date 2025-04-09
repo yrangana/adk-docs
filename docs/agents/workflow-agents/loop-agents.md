@@ -42,5 +42,5 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
 #### Full code
 
 ```py
---8<-- "examples/python/snippets/agents/workflow-agents/loop-agent-doc-improv-agent.py"
+--8<-- "examples/python/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.py"
 ```

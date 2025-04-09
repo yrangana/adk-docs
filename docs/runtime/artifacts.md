@@ -106,7 +106,7 @@ from google.adk.agents import LlmAgent # Any agent
 from google.adk.sessions import InMemorySessionService
 
 # Example: Configuring the Runner with an Artifact Service
-my_agent = LlmAgent(name="artifact_user_agent", model="gemini-2.0-flash")
+my_agent = LlmAgent(name="artifact_user_agent", model="gemini-2.0-flash-exp")
 artifact_service = InMemoryArtifactService() # Choose an implementation
 session_service = InMemorySessionService()
 
@@ -206,7 +206,7 @@ from google.adk.agents import LlmAgent
 from google.adk.sessions import InMemorySessionService
 
 # Your agent definition
-agent = LlmAgent(name="my_agent", model="gemini-2.0-flash")
+agent = LlmAgent(name="my_agent", model="gemini-2.0-flash-exp")
 
 # Instantiate the desired artifact service
 artifact_service = InMemoryArtifactService()

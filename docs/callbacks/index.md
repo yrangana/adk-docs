@@ -36,7 +36,7 @@ def my_before_model_logic(
 # --- Register it during Agent creation ---
 my_agent = LlmAgent(
     name="MyCallbackAgent",
-    model="gemini-2.0-flash", # Or your desired model
+    model="gemini-2.0-flash-exp", # Or your desired model
     instruction="Be helpful.",
     # Other agent parameters...
     before_model_callback=my_before_model_logic # Pass the function here
@@ -132,7 +132,7 @@ def block_forbidden_input(
 # Agent definition using the callback
 guardrail_agent = LlmAgent(
     name="GuardrailAgent",
-    model="gemini-2.0-flash",
+    model="gemini-2.0-flash-exp",
     instruction="Answer user questions.",
     before_model_callback=block_forbidden_input
 )
