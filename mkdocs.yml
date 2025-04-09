@@ -26,6 +26,7 @@ theme:
   favicon: assets/agent-development-kit.png
   icon:
     repo: fontawesome/brands/github
+  custom_dir: overrides
   palette:
     - scheme: default
       primary: white
@@ -88,6 +89,7 @@ plugins:
 
 # Navigation
 nav:
+  - Home: /
   - Get Started:
     - get-started/index.md
     - Installation: get-started/installation.md
