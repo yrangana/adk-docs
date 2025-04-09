@@ -133,9 +133,10 @@ nav:
     - Callback patterns: callbacks/design-patterns-and-best-practices.md
   - Runtime:
     - runtime/index.md
-    - Invocation context: runtime/invocation-context.md
   - Events:
     - events/index.md
+  - Context: 
+    - context/index.md
   - Deploy:
     - deploy/index.md
     - Local testing: deploy/local-testing.md
