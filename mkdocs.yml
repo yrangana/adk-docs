@@ -53,7 +53,7 @@ theme:
     - navigation.path
     - navigation.top
     - navigation.tracking
-    - navigation.indexes 
+    - navigation.indexes
     - toc.follow
 
 # Extensions
@@ -88,7 +88,7 @@ plugins:
   # - social
 
 # Navigation
-nav: 
+nav:
   - Get Started:
     - get-started/index.md
     - Installation: get-started/installation.md
@@ -103,7 +103,7 @@ nav:
   - Agents:
     - agents/index.md
     - LLM agents: agents/llm-agents.md
-    - Workflow agents: 
+    - Workflow agents:
       - agents/workflow-agents/index.md
       - Sequential agents: agents/workflow-agents/sequential-agents.md
       - Loop agents: agents/workflow-agents/loop-agents.md
@@ -135,7 +135,7 @@ nav:
     - runtime/index.md
   - Events:
     - events/index.md
-  - Context: 
+  - Context:
     - context/index.md
   - Deploy:
     - deploy/index.md
