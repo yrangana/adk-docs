@@ -26,7 +26,6 @@ theme:
   favicon: assets/agent-development-kit.png
   icon:
     repo: fontawesome/brands/github
-  custom_dir: overrides
   palette:
     - scheme: default
       primary: white
