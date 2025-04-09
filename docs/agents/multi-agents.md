@@ -84,7 +84,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     ```
 
 * **[`LoopAgent`](workflow-agents/loop-agents.md):** Executes its `sub_agents` sequentially in a loop.
-    * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent yields an [`Event`](../runtime/events.md) with `actions.escalate=True`.
+    * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent yields an [`Event`](../events/index.md) with `actions.escalate=True`.
     * **Context & State:** Passes the *same* `InvocationContext` in each iteration, allowing state changes (e.g., counters, flags) to persist across loops.
 
     ```python
