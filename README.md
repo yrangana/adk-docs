@@ -17,7 +17,7 @@ debugging, versioning, and deployment anywhere – from your laptop to the cloud
 
 ## ✨ Key Features
 
-- **Versatile Tool Integration**: Utilize pre-built tools, custom functions,
+- **Rich Tool Ecosystem**: Utilize pre-built tools, custom functions,
   OpenAPI specs, or integrate existing tools to give agents diverse
   capabilities, all for tight integration with the Google ecosystem.
 
@@ -27,14 +27,8 @@ debugging, versioning, and deployment anywhere – from your laptop to the cloud
 - **Modular Multi-Agent Systems**: Design scalable applications by composing
   multiple specialized agents into flexible hierarchies.
 
-
-
-* **Rich Tool Ecosystem:** Equip agents with diverse capabilities using
-  pre-built tools, custom Python functions, API specifications, or integrating
-  existing tools.
-
-- **Deploy Anywhere**: Easily containerize and deploy agents locally, on Cloud
-  Run, or scale seamlessly with Vertex AI Agent Engine.
+- **Deploy Anywhere**: Easily containerize and deploy agents on Cloud Run or
+  scale seamlessly with Vertex AI Agent Engine.
 
 ## 🚀 Installation
 
