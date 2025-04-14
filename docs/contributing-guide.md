@@ -6,7 +6,7 @@ This guide provides information on how to get involved.
 
 Contains the core Python library source code.
 
-## 2. [`google/adk-docs`](https://google.github.io/adk-docs/)
+## 2. [`google/adk-docs`](https://github.com/google/adk-docs/)
 
 Contains the source for the documentation site you are currently reading.
 
@@ -75,15 +75,16 @@ Help fix bugs, implement new features or contribute code samples for the documen
 *   **Framework:** [Create a Pull Request in `google/adk-python`](https://github.com/google/adk-python/pulls)
 *   **Documentation:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
 
-
 ### Code Reviews
-    
+
 * All contributions, including those from project members, undergo a review process.
 
 * We use GitHub Pull Requests (PRs) for code submission and review. Please ensure your PR clearly describes the changes you are making.
 
 ## License
+
 By contributing, you agree that your contributions will be licensed under the project's [Apache 2.0 License](https://github.com/google/adk-docs/blob/main/LICENSE).
 
 ## Questions?
+
 If you get stuck or have questions, feel free to open an issue on the relevant repository's issue tracker.
