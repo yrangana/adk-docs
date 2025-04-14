@@ -85,6 +85,7 @@ plugins:
   - redirects:
       redirect_maps:
         'get-started/local-testing.md': 'get-started/testing.md'
+        'get-started/tutorial.md': 'tutorials/multi-agent.md'
 
 # Navigation
 nav:
