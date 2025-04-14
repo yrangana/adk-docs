@@ -94,10 +94,13 @@ nav:
     - Installation: get-started/installation.md
     - Quickstart: get-started/quickstart.md
     - Quickstart (streaming): get-started/quickstart-streaming.md
-    - Tutorial: get-started/tutorial.md
     - Testing: get-started/testing.md
     - Sample agents: https://github.com/google/adk-samples
     - About ADK: get-started/about.md
+  - Tutorials:
+      - Full Walkthrough: tutorials/multi-agent.md
+      - MCP Tools: tutorials/mcp-tools.md
+      - Deploying to Agent Engine: tutorials/deploying-agent-engine.md
   - Agents:
     - agents/index.md
     - LLM agents: agents/llm-agents.md
