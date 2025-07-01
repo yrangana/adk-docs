@@ -161,8 +161,8 @@ export GOOGLE_GENAI_USE_VERTEXAI=True
         # Call the function to get the FastAPI app instance
         # Ensure the agent directory name ('capital_agent') matches your agent folder
         app = get_fast_api_app(
-            agent_dir=AGENT_DIR,
-            session_db_url=SESSION_DB_URL,
+            agents_dir=AGENT_DIR,
+            session_service_uri=SESSION_DB_URL,
             allow_origins=ALLOWED_ORIGINS,
             web=SERVE_WEB_INTERFACE,
         )
@@ -207,6 +207,23 @@ export GOOGLE_GENAI_USE_VERTEXAI=True
 
         CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
         ```
+
+    #### Defining Multiple Agents
+
+    You can define and deploy multiple agents within the same Cloud Run instance by creating separate folders in the root of `your-project-directory/`. Each folder represents one agent and must define a `root_agent` in its configuration.
+
+    Example structure:
+
+    ```txt
+    your-project-directory/
+    ├── capital_agent/
+    │   ├── __init__.py
+    │   └── agent.py       # contains `root_agent` definition
+    ├── population_agent/
+    │   ├── __init__.py
+    │   └── agent.py       # contains `root_agent` definition
+    └── ...
+    ```
 
     #### Deploy using `gcloud`
 
