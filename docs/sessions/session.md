@@ -143,7 +143,7 @@ the storage backend that best suits your needs:
 
 2.  **`VertexAiSessionService`**
 
-    *   **How it works:** Uses Google Cloud's Vertex AI infrastructure via API
+    *   **How it works:** Uses Google Cloud Vertex AI infrastructure via API
         calls for session management.
     *   **Persistence:** Yes. Data is managed reliably and scalably via
         [Vertex AI Agent Engine](https://google.github.io/adk-docs/deploy/agent-engine/).
@@ -153,6 +153,7 @@ the storage backend that best suits your needs:
             [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
         *   A Reasoning Engine resource name/ID that can setup following this
             [tutorial](https://google.github.io/adk-docs/deploy/agent-engine/).
+        *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService for free, see how to [try Session and Memory for free.](express-mode.md)
     *   **Best for:** Scalable production applications deployed on Google Cloud,
         especially when integrating with other Vertex AI features.
 
@@ -225,9 +226,8 @@ conversation history and temporary data are stored and persist.
 Here’s a simplified flow of how `Session` and `SessionService` work together
 during a conversation turn:
 
-1.  **Start or Resume:** Your application's `Runner` uses the `SessionService`
-    to either `create_session` (for a new chat) or `get_session` (to retrieve an
-    existing one).
+1.  **Start or Resume:** Your application needs to use the `SessionService` to
+    either `create_session` (for a new chat) or use an existing session id.
 2.  **Context Provided:** The `Runner` gets the appropriate `Session` object
     from the appropriate service method, providing the agent with access to the
     corresponding Session's `state` and `events`.

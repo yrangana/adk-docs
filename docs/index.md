@@ -10,8 +10,6 @@ hide:
   </div>
 </div>
 
-## What is Agent Development Kit?
-
 Agent Development Kit (ADK) is a flexible and modular framework for **developing
 and deploying AI agents**. While optimized for Gemini and the Google ecosystem,
 ADK is **model-agnostic**, **deployment-agnostic**, and is built for
@@ -36,24 +34,21 @@ from simple tasks to complex workflows.
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>0.1.0</version>
+        <version>0.2.0</version>
     </dependency>
     ```
 
     ```gradle title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:0.1.0'
+        implementation 'com.google.adk:google-adk:0.2.0'
     }
     ```
 </div>
 
-
 <p style="text-align:center;">
-  <a href="get-started/quickstart/" class="md-button" style="margin:3px">Quickstart</a>
-  <a href="tutorials/" class="md-button" style="margin:3px">Tutorials</a>
-  <a href="http://github.com/google/adk-samples" class="md-button" target="_blank" style="margin:3px">Sample Agents</a>
-  <a href="api-reference/" class="md-button" style="margin:3px">API Reference</a>
-  <a href="contributing-guide/" class="md-button" style="margin:3px">Contribute ❤️</a>
+  <a href="/adk-docs/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
+  <a href="/adk-docs/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
+  <a href="/adk-docs/get-started/about/" class="md-button" style="margin:3px">Technical overview</a>
 </p>
 
 ---
