@@ -53,7 +53,7 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
     <div class="tool-card-content">
       <h3>Application Integration</h3>
-      <p>Link your agents to enterprise applications using Integration Connectors</p>
+      <p>Link your agents to enterprise apps using Integration Connectors</p>
     </div>
   </a>
 
@@ -83,7 +83,7 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
     <div class="tool-card-content">
       <h3>GKE Code Executor</h3>
-      <p>Run AI-generated code in a secure and scalable GKE Sandbox environment</p>
+      <p>Run AI-generated code in a secure and scalable GKE environment</p>
     </div>
   </a>
 
@@ -97,7 +97,7 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
   </a>
 
-  <a href="/adk-docs/tools/google-cloud-tools/#toolbox-tools-for-databases" class="tool-card">
+  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
     </div>
@@ -131,12 +131,79 @@ Check out the following pre-built tools that you can use with ADK agents:
 
 ### Third-party tools
 
-*   **[LangChain Tools](/adk-docs/tools/third-party/#using-langchain-tools)**:
-    Integrate tools from the LangChain ecosystem.
-*   **[CrewAI tools](/adk-docs/tools/third-party/#using-crewai-tools)**:
-    Integrate tools from the CrewAI library.
-*   **[OpenAPI Integration](/adk-docs/tools/third-party/openapi-tools/)**:
-    Generate callable tools directly from an OpenAPI Specification.
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/third-party/browserbase/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-browserbase.png" alt="Browserbase">
+    </div>
+    <div class="tool-card-content">
+      <h3>Browserbase</h3>
+      <p>Powers web browsing capabilities for AI agents</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-exa.png" alt="Exa">
+    </div>
+    <div class="tool-card-content">
+      <h3>Exa</h3>
+      <p>Search and extract structured content from websites and live data</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/firecrawl/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-firecrawl.png" alt="Firecrawl">
+    </div>
+    <div class="tool-card-content">
+      <h3>Firecrawl</h3>
+      <p>Empower your AI apps with clean data from any website</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-github.png" alt="GitHub">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitHub</h3>
+      <p>Analyze code, manage issues and PRs, and automate workflows</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-hugging-face.png" alt="Hugging Face">
+    </div>
+    <div class="tool-card-content">
+      <h3>Hugging Face</h3>
+      <p>Access models, datasets, research papers, and AI tools</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-notion.png" alt="Notion">
+    </div>
+    <div class="tool-card-content">
+      <h3>Notion</h3>
+      <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/tavily/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-tavily.png" alt="Tavily">
+    </div>
+    <div class="tool-card-content">
+      <h3>Tavily</h3>
+      <p>Provides real-time web search, extraction, and crawling tools</p>
+    </div>
+  </a>
+
+</div>
 
 ## Build your tools
 
@@ -147,3 +214,5 @@ workflows using the following guides:
     your specific ADK agent needs.
 *   **[MCP Tools](/adk-docs/tools/function-tools/)**: Connect MCP servers as tools
     for your ADK agents.
+*   **[OpenAPI Integration](/adk-docs/tools-custom/openapi-tools/)**:
+    Generate callable tools directly from an OpenAPI Specification.
